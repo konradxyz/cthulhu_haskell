@@ -1,0 +1,36 @@
+context: list of frames + register + (opt new frame)
+frame: list of pair <ownership, value> 
+
+instructions:
+WAIT(int i, nextOpLabel) // waits for 
+ALLOC(int size) // prepares new tmp frame
+PARAM_COPY(int in, int out) // 
+PARAM_MOVE(int in, int out) // 
+CALL(lab  el
+
+
+WAIT
+ALLOC
+ALLOC_PAR
+ADD_PARAM
+ADD_PARAM_PAR
+ADD
+SUB
+LT
+#GOTO
+JMP_IF_ZERO
+RET
+LOAD
+STORE
+
+
+Wersja jednowatkowa:
+ALLOC
+ADD_PARAM
+ADD
+LT
+JMP_IF_ZERO
+RET
+LOAD
+STORE
+
