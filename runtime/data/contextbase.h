@@ -14,10 +14,11 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
-//#include "data/context.h"
+
 
 namespace casm {
-class Context {};
+
+class Context;
 
 class ContextBase {
 private:
@@ -31,48 +32,18 @@ private:
 	std::mutex lock;
 	std::condition_variable waitingForTask;
 public:
-	ContextBase(int maxTaskCount, int threadCount) : taskCount(0), maxTaskCount(maxTaskCount), threadCount(threadCount) {
-	}
+	ContextBase(int maxTaskCount, int threadCount);
 	bool isFull() {
 		return unsafeTaskCount >= maxTaskCount;
 	}
 
-	void stop() {
-		std::unique_lock<std::mutex> m(lock);
-		for ( int i = 0; i < threadCount; ++i ) {
-			tasks.push_back(nullptr);
-		}
-		waitingForTask.notify_all();
-	}
+	void stop();
 
-	void pushTask(std::unique_ptr<Context>&& ctx) {
-		std::unique_lock<std::mutex> m(lock);
-		tasks.push_back(std::move(ctx));
-		++unsafeTaskCount;
-		waitingForTask.notify_one();
-	}
+	void pushTask(std::unique_ptr<Context>&& ctx);
+	void pushTasks(std::vector<std::unique_ptr<Context>>* contexts);
 
-	void pushTasks(std::vector<std::unique_ptr<Context>>* contexts) {
-		std::unique_lock<std::mutex> m(lock);
-		for (auto& ctx : *contexts) {
-			tasks.push_back(std::move(ctx));
-			++unsafeTaskCount;
-			waitingForTask.notify_one();
-		}
-	}
-
-	std::unique_ptr<Context> popTask() {
-		std::unique_lock<std::mutex> m(lock);
-		while ( tasks.size() <= 0 ) {
-			++waitingThreads;
-			waitingForTask.wait(m);
-			--waitingThreads;
-		}
-		auto res = std::move(tasks.back());
-		tasks.pop_back();
-		--unsafeTaskCount;
-		return std::move(res);
-	}
+	std::unique_ptr<Context> popTask();
+	~ContextBase();
 };
 
 }

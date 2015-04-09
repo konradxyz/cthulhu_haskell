@@ -24,7 +24,7 @@ $(eval $(call obj,data,context,data/value.h))
 $(eval $(call obj,data,value,data/futurecontext.h utils/spinlock.h))
 
 
-$(TARGET):	$(OBJS)
+$(TARGET):	$(OBJS) example/fibo.h
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
 all:	$(TARGET)

@@ -30,12 +30,13 @@ struct Context {
 	std::vector<std::unique_ptr<Frame>> frames;
 	Frame* currentFrame;
 	unsigned nextInstruction;
+	std::shared_ptr<ValueWrapper> accumulator;
 public:
 	Context();
 	~Context();
 
 	// This one should be removed as well probably.
-	void allocateFrame(unsigned envSize, unsigned tmpSize) {
+	void allocateFrame(unsigned envSize) {
 		pushFrame(utils::make_unique<Frame>(envSize));
 	}
 
@@ -47,6 +48,7 @@ public:
 	void removeLastFrame() {
 		frames.pop_back();
 		currentFrame = frames.back().get();
+		nextInstruction = currentFrame->nextInstruction;
 	}
 
 	int intFromTemporary(unsigned id) const;

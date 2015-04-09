@@ -26,5 +26,6 @@ ValueWrapper::ValueWrapper(std::unique_ptr<Value>&& value) :
 }
 
 ValueWrapper::~ValueWrapper() {}
+CallSpecification::~CallSpecification(){}
 
 }

@@ -18,10 +18,41 @@ class Function;
 class Value;
 class FutureContext;
 class ContextBase;
+class ValueWrapper;
 
 enum ValueType {
 	FUTURE_VALUE = 0,
 	REAL_VALUE = 1
+};
+
+class CallSpecification {
+public:
+	unsigned getEnvSize() const {
+		return envSize;
+	}
+
+	void setEnvSize(unsigned envSize) {
+		this->envSize = envSize;
+	}
+
+	unsigned getFunctionInstruction() const {
+		return functionInstruction;
+	}
+
+	void setFunctionInstruction(unsigned functionInstruction) {
+		this->functionInstruction = functionInstruction;
+	}
+
+	std::vector<std::shared_ptr<ValueWrapper>>* getParams() {
+		return &params;
+	}
+	~CallSpecification();
+
+private:
+	unsigned functionInstruction;
+	unsigned envSize;
+	std::vector<std::shared_ptr<ValueWrapper>> params;
+
 };
 
 // TODO: we might improve performance by moving int to this class.
@@ -62,17 +93,50 @@ class ApplyValue : public Value {
 private:
 	unsigned paramsNeeded;
 	unsigned paramsAvailable;
+	unsigned envSize;
+public:
+	ApplyValue(unsigned paramsNeeded, unsigned paramsAvailable, unsigned envSize) :
+			paramsNeeded(paramsNeeded), paramsAvailable(paramsAvailable), envSize(envSize) {
+	}
+
+	unsigned getEnvSize() const {
+		return envSize;
+	}
+
+	unsigned getParamsAvailable() const {
+		return paramsAvailable;
+	}
+
+	unsigned getParamsNeeded() const {
+		return paramsNeeded;
+	}
+
+	virtual void prepareCall(CallSpecification* spec) const = 0;
 };
 
-class FunctionApplyValue : public Value {
+class FunctionApplyValue : public ApplyValue {
 private:
 	unsigned functionInstruction;
+public:
+	FunctionApplyValue(unsigned functionLabel, unsigned paramsNeeded, unsigned envSize)
+		: ApplyValue(paramsNeeded, 0, envSize), functionInstruction(functionLabel) {}
+	void prepareCall(CallSpecification* spec) const override {
+		spec->setFunctionInstruction(functionInstruction);
+		spec->setEnvSize(getEnvSize());
+	}
 };
 
-class ParamApplyValue : public Value {
+class ParamApplyValue : public ApplyValue {
 private:
 	std::shared_ptr<ValueWrapper> function;
 	std::shared_ptr<ValueWrapper> param;
+public:
+	ParamApplyValue(std::shared_ptr<ValueWrapper>&& function, std::shared_ptr<ValueWrapper>&& param)
+		: ApplyValue(*static_cast<const ApplyValue*>(function->getValue())), function(std::move(function)), param(std::move(param)) {}
+	void prepareCall(CallSpecification* spec) const override {
+		static_cast<const ApplyValue*>(function->getValue())->prepareCall(spec);
+		spec->getParams()->push_back(param);
+	}
 };
 
 class StructureValue : public Value {
