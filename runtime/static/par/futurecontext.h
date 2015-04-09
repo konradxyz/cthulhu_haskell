@@ -8,7 +8,7 @@
 #ifndef ASM_FUTURECONTEXT_H_
 #define ASM_FUTURECONTEXT_H_
 
-#include "utils/spinlock.h"
+#include "static/utils/spinlock.h"
 #include <memory>
 #include <vector>
 

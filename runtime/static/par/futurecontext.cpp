@@ -5,11 +5,8 @@
  *      Author: kp
  */
 
-#include "data/futurecontext.h"
-#include "utils/logging.h"
-#include "data/context.h"
-#include "data/value.h"
 
+#include "static/data.h"
 
 namespace casm {
 unsigned rand = 1231231;
@@ -24,15 +21,13 @@ ContextUpdateRequest::~ContextUpdateRequest(){}
 std::unique_ptr<Context> FutureContext::updateContext(
 		std::unique_ptr<Context>&& context, unsigned source, unsigned target) {
 	std::lock_guard<utils::SpinLock> guard(lock);
-	ASSERT(rand == 1231231);
 	if (!hasNoValue) {
 		auto frame = context->currentFrame;
 		// OK, this one is tricky - when using shared ptr.
 		// Under source index there is some ValueWrapper.
 		// That certainly owns this.
-		// As such, we need to keep referene to this thing untill the end of the method.
+		// As such, we need to keep reference to this thing until the end of the method.
 		auto tmp = std::move(frame->environment[source]);
-		frame->environment[source] = valueWrapper;
 		//ASSERT(valueWrapper->getValue() != (Value*) 0x65);
 		return std::move(context);
 	} else {

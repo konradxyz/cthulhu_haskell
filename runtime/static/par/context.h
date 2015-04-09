@@ -8,9 +8,9 @@
 #ifndef ASM_CONTEXT_H_
 #define ASM_CONTEXT_H_
 
-#include "utils/ptr.h"
+#include "static/utils/ptr.h"
 #include <vector>
-#include "utils/spinlock.h"
+#include "static/utils/spinlock.h"
 #include <mutex>
 
 namespace casm {

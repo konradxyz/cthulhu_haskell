@@ -4,8 +4,7 @@
  *  Created on: Mar 2, 2015
  *      Author: kp
  */
-#include "data/context.h"
-#include "data/value.h"
+#include "static/data.h"
 
 namespace casm {
 

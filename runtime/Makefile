@@ -1,33 +1,33 @@
-CXXFLAGS =	-O2 -g -Wall -fmessage-length=0 -std=c++0x -I.
+CXXFLAGS =	 -O2 -Wall -fmessage-length=0 -std=c++0x -I.
 
-OBJS =		runtime.o
+OBJS =
 
 LIBS =
 
-TARGET =	runtime
+TARGET =	seq
 
+
+all:	$(TARGET)
 
 # $1 - directory, $2, -name $3 - headers
 define obj
 $(info $1/$2)
-OBJS += $(1)/$(2).o
-$(1)/$(2).o: $(1)/$(2).cpp $(1)/$(2).h $3
-	$(CXX) $(CXXFLAGS) -c -o $1/$2.o $1/$2.cpp
+OBJS += static/$(1)/$(2).o
+static/$(1)/$(2).o: static/$(1)/$(2).cpp static/$(1)/$(2).h $3
+	$(CXX) $(CXXFLAGS) -c -o static/$1/$2.o static/$1/$2.cpp
 endef
 
-$(eval $(call obj,data,contextbase,data/context.h utils/spinlock.h))
 
-$(eval $(call obj,data,futurecontext,data/context.h data/value.h utils/spinlock.h))
+$(eval $(call obj,seq,context,static/seq/value.h))
 
-$(eval $(call obj,data,context,data/value.h))
+$(eval $(call obj,seq,value))
 
-$(eval $(call obj,data,value,data/futurecontext.h utils/spinlock.h))
+$(eval $(call obj,seq,seq, gen.h static/seq/seq.h))
 
 
-$(TARGET):	$(OBJS) example/fibo.h
+$(TARGET):	$(OBJS) gen.h
 	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
 
-all:	$(TARGET)
 
 clean:
 	rm -f $(OBJS) $(TARGET)

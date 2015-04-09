@@ -5,9 +5,8 @@
  *      Author: kp
  */
 
-#include "data/value.h"
-#include "data/futurecontext.h"
-#include "utils/ptr.h"
+#include "static/data.h"
+#include "static/utils/ptr.h"
 
 namespace casm {
 std::shared_ptr<ValueWrapper> generateFutureWrapper() {

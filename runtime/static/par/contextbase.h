@@ -10,7 +10,7 @@
 
 #include <memory>
 #include <vector>
-#include "utils/spinlock.h"
+#include "static/utils/spinlock.h"
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
@@ -19,6 +19,7 @@
 namespace casm {
 
 class Context;
+class ValueWrapper;
 
 class ContextBase {
 private:
@@ -31,6 +32,7 @@ private:
 	std::vector<std::unique_ptr<Context>> tasks;
 	std::mutex lock;
 	std::condition_variable waitingForTask;
+	std::shared_ptr<ValueWrapper> result;
 public:
 	ContextBase(int maxTaskCount, int threadCount);
 	bool isFull() {
@@ -43,6 +45,9 @@ public:
 	void pushTasks(std::vector<std::unique_ptr<Context>>* contexts);
 
 	std::unique_ptr<Context> popTask();
+	std::shared_ptr<ValueWrapper> getResult() {
+		return result;
+	}
 	~ContextBase();
 };
 

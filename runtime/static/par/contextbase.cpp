@@ -5,13 +5,12 @@
  *      Author: kp
  */
 
-#include "data/contextbase.h"
-#include "data/context.h"
+#include "static/data.h"
 
 namespace casm {
 
 ContextBase::ContextBase(int maxTaskCount, int threadCount) :
-		taskCount(0), maxTaskCount(maxTaskCount), threadCount(threadCount) {
+		taskCount(0), maxTaskCount(maxTaskCount), threadCount(threadCount), result(casm::generateFutureWrapper()) {
 }
 ContextBase::~ContextBase() {
 }
@@ -44,7 +43,11 @@ std::unique_ptr<Context> ContextBase::popTask() {
 	std::unique_lock<std::mutex> m(lock);
 	while (tasks.size() <= 0) {
 		++waitingThreads;
-		waitingForTask.wait(m);
+		if (waitingThreads >= threadCount) {
+			stop();
+		} else {
+			waitingForTask.wait(m);
+		}
 		--waitingThreads;
 	}
 	auto res = std::move(tasks.back());
