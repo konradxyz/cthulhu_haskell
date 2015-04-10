@@ -16,7 +16,7 @@ Frame::~Frame() {
 
 
 Context::Context() :
-		currentFrame(nullptr), nextInstruction(0) {
+		currentFrame(nullptr), nextInstruction(0), arithmeticAccumulator(0) {
 }
 
 
