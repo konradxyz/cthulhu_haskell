@@ -28,6 +28,7 @@ struct Context {
 	Frame* currentFrame;
 	unsigned nextInstruction;
 	std::shared_ptr<Value> accumulator;
+	std::vector<std::shared_ptr<Value>> params;
 	int arithmeticAccumulator;
 public:
 	Context();
@@ -48,6 +49,7 @@ public:
 		currentFrame = frames.back().get();
 		nextInstruction = currentFrame->nextInstruction;
 	}
+
 };
 
 std::unique_ptr<seq::Context> generateStartingContext(int param,

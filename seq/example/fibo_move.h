@@ -9,7 +9,6 @@
 #define EXAMPLE_FIBO_H_
 
 #include "static/seq/seq.h"
-#include "static/utils/logging.h"
 
 #define FIBO 0
 #define FIBO_ELSE 1
@@ -40,24 +39,25 @@ void executeContext(seq::Context* context) {
 					context->arithmeticAccumulator = INT(context->currentFrame->environment[0]) - 1;
 				}
 				STORE_ARITH(1)
-				ALLOC_PARAMS(3)
-				PREPARE_PARAM_MOVE(0, 1)
-				CALL(FIBO, FIBO_1)
+				ALLOC(FIBO, 1, 3, FIBO_ADD_PARAM_1)
+			case FIBO_ADD_PARAM_1:
+				ADD_PARAM_MOVE(1, FIBO_1)
 			case FIBO_1:
 				STORE(1)
 				{
 					context->arithmeticAccumulator = INT(context->currentFrame->environment[0])  - 2;
 				}
 				STORE_ARITH(2)
-				ALLOC_PARAMS(3)
-				PREPARE_PARAM_MOVE(0, 2)
-				CALL(FIBO, FIBO_2)
+				ALLOC(FIBO, 1, 3, FIBO_ADD_PARAM_2)
+			case FIBO_ADD_PARAM_2:
+				ADD_PARAM_MOVE(2, FIBO_2)
 			case FIBO_2:
 				{
 					context->arithmeticAccumulator = INT(context->currentFrame->environment[1])
 										+ INT(context->accumulator);
 				}
-				STORE_ARITH_ACC
+				STORE_ARITH(2)
+				LOAD_MOVE(2)
 				RET
 			case FINAL:
 				FINALIZE

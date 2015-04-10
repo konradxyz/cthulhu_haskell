@@ -22,10 +22,10 @@ $(eval $(call obj,seq,context,static/seq/value.h))
 
 $(eval $(call obj,seq,value))
 
-$(eval $(call obj,seq,seq, gen.h static/seq/seq.h))
+$(eval $(call obj,seq,seq, gen.h static/seq/seq.h  static/seq/instructions.h))
 
 
-$(TARGET):	$(OBJS) gen.h
+$(TARGET):	$(OBJS)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 
 

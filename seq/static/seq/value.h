@@ -86,12 +86,16 @@ public:
 class FunctionApplyValue : public ApplyValue {
 private:
 	unsigned functionInstruction;
+	std::vector<std::shared_ptr<Value>> params;
 public:
 	FunctionApplyValue(unsigned functionLabel, unsigned paramsNeeded, unsigned envSize)
 		: ApplyValue(paramsNeeded, 0, envSize), functionInstruction(functionLabel) {}
 	void prepareCall(CallSpecification* spec) const override {
 		spec->setFunctionInstruction(functionInstruction);
 		spec->setEnvSize(getEnvSize());
+		for (unsigned i = 0; i < params.size(); ++i ) {
+			(*spec->getParams())[i] = params[i];
+		}
 	}
 };
 
