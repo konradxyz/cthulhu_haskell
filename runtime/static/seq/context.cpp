@@ -14,10 +14,6 @@ Frame::Frame(unsigned envSize) :
 Frame::~Frame() {
 }
 
-int Context::intFromTemporary(unsigned id) const {
-	//return static_cast<const IntValue*>(currentFrame->temporaryValues[id])->getValue();
-	return 0;
-}
 
 Context::Context() :
 		currentFrame(nullptr), nextInstruction(0) {
@@ -31,7 +27,7 @@ std::unique_ptr<seq::Context> generateStartingContext(int param, unsigned entryP
 	result->allocateFrame(0);
 	result->currentFrame->nextInstruction = final;
 	result->allocateFrame(envSize);
-	result->currentFrame->environment[0] = seq::generateValueWrapper(utils::make_unique<seq::IntValue>(param));
+	result->currentFrame->environment[0] = std::make_shared<seq::IntValue>(param);
 	result->nextInstruction = entryPoint;
 	return std::move(result);
 }

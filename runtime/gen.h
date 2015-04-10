@@ -25,38 +25,39 @@ std::unique_ptr<seq::Context> generateStartingContext(int param) {
 }
 
 void executeContext(seq::Context* context) {
-
 	while ( context != nullptr ) {
 		switch (context->nextInstruction) {
 			case FIBO:
-				CONST(2);
-				STORE(1);
-				LOAD(0);
-				LT(1);
+				{
+					context->arithmeticAccumulator = INT(context->currentFrame->environment[0]) < 2  ? 1 : 0;
+				}
 				JMP_IF_ZERO(FIBO_ELSE);
 				LOAD(0);
 				RET;
 			case FIBO_ELSE:
-				CONST(1)
-				STORE(1)
-				LOAD(0)
-				SUB(1)
-				STORE(1)
+				{
+					context->arithmeticAccumulator = INT(context->currentFrame->environment[0]) - 1;
+				}
+				STORE_ARITH(1)
 				ALLOC(FIBO, 1, 3, FIBO_ADD_PARAM_1)
 			case FIBO_ADD_PARAM_1:
 				ADD_PARAM(1, FIBO_1)
 			case FIBO_1:
 				STORE(1)
-				CONST(2)
-				STORE(2)
-				LOAD(0)
-				SUB(2)
-				STORE(2)
+				{
+					context->arithmeticAccumulator = INT(context->currentFrame->environment[0])  - 2;
+				}
+				STORE_ARITH(2)
 				ALLOC(FIBO, 1, 3, FIBO_ADD_PARAM_2)
 			case FIBO_ADD_PARAM_2:
 				ADD_PARAM(2, FIBO_2)
 			case FIBO_2:
-				ADD(1)
+				{
+					context->arithmeticAccumulator = INT(context->currentFrame->environment[1])
+										+ INT(context->accumulator);
+				}
+				STORE_ARITH(2)
+				LOAD(0)
 				RET
 			case FINAL:
 				FINALIZE

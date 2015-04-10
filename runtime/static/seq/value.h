@@ -17,12 +17,6 @@ namespace seq {
 class Function;
 class Value;
 class ContextBase;
-class ValueWrapper;
-
-enum ValueType {
-	FUTURE_VALUE = 0,
-	REAL_VALUE = 1
-};
 
 class CallSpecification {
 public:
@@ -42,7 +36,7 @@ public:
 		this->functionInstruction = functionInstruction;
 	}
 
-	std::vector<std::shared_ptr<ValueWrapper>>* getParams() {
+	std::vector<std::shared_ptr<Value>>* getParams() {
 		return &params;
 	}
 	~CallSpecification();
@@ -50,28 +44,10 @@ public:
 private:
 	unsigned functionInstruction;
 	unsigned envSize;
-	std::vector<std::shared_ptr<ValueWrapper>> params;
+	std::vector<std::shared_ptr<Value>> params;
 
 };
 
-// TODO: we might improve performance by moving int to this class.
-class ValueWrapper {
-private:
-	const ValueType type;
-	std::unique_ptr<Value> value;
-public:
-	ValueWrapper(std::unique_ptr<Value>&& value);
-
-	const Value* getValue() {
-		return value.get();
-	}
-
-	const ValueType getType() const {
-		return type;
-	}
-
-	~ValueWrapper();
-};
 
 class Value {
 public:
@@ -121,13 +97,13 @@ public:
 
 class ParamApplyValue : public ApplyValue {
 private:
-	std::shared_ptr<ValueWrapper> function;
-	std::shared_ptr<ValueWrapper> param;
+	std::shared_ptr<ApplyValue> function;
+	std::shared_ptr<Value> param;
 public:
-	ParamApplyValue(std::shared_ptr<ValueWrapper>&& function, std::shared_ptr<ValueWrapper>&& param)
-		: ApplyValue(*static_cast<const ApplyValue*>(function->getValue())), function(std::move(function)), param(std::move(param)) {}
+	ParamApplyValue(std::shared_ptr<ApplyValue>&& function, std::shared_ptr<Value>&& param)
+		: ApplyValue(*function), function(std::move(function)), param(std::move(param)) {}
 	void prepareCall(CallSpecification* spec) const override {
-		static_cast<const ApplyValue*>(function->getValue())->prepareCall(spec);
+		function->prepareCall(spec);
 		spec->getParams()->push_back(param);
 	}
 };
@@ -135,7 +111,7 @@ public:
 class StructureValue : public Value {
 private:
 	unsigned constructorId;
-	std::vector<std::shared_ptr<ValueWrapper>> arguments;
+	std::vector<std::shared_ptr<Value>> arguments;
 };
 
 class IntValue : public Value {
@@ -154,8 +130,6 @@ public:
 private:
 	int value;
 };
-
-std::shared_ptr<ValueWrapper> generateValueWrapper(std::unique_ptr<Value>&& value);
 
 }
 

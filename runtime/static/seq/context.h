@@ -13,10 +13,10 @@
 
 namespace seq {
 
-class ValueWrapper;
+class Value;
 
 struct Frame {
-	std::vector<std::shared_ptr<ValueWrapper>> environment;
+	std::vector<std::shared_ptr<Value>> environment;
 	unsigned nextInstruction;
 
 	Frame(unsigned envSize);
@@ -27,7 +27,8 @@ struct Context {
 	std::vector<std::unique_ptr<Frame>> frames;
 	Frame* currentFrame;
 	unsigned nextInstruction;
-	std::shared_ptr<ValueWrapper> accumulator;
+	std::shared_ptr<Value> accumulator;
+	int arithmeticAccumulator;
 public:
 	Context();
 	~Context();
@@ -47,8 +48,6 @@ public:
 		currentFrame = frames.back().get();
 		nextInstruction = currentFrame->nextInstruction;
 	}
-
-	int intFromTemporary(unsigned id) const;
 };
 
 std::unique_ptr<seq::Context> generateStartingContext(int param,

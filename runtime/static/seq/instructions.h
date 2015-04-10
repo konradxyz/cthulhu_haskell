@@ -9,43 +9,23 @@
 #define INSTRUCTIONS_H_
 
 
-#define INT(ptr) static_cast<const seq::IntValue*>((ptr)->getValue())->getValue()
+#define INT(ptr) static_cast<const seq::IntValue*>((ptr.get()))->getValue()
 
 #define LOAD(id) { context->accumulator = context->currentFrame->environment[id]; }
 
-#define CONST(val) { context->accumulator = seq::generateValueWrapper(utils::make_unique<seq::IntValue>(val)); }
+#define CONST(val) { context->accumulator = std::make_shared<seq::IntValue>(val); }
 
-#define STORE(id) { context->currentFrame->environment[id] = context->accumulator; }
-
-#define LT(id) {\
-		int other = INT(context->currentFrame->environment[id]);\
-		int current = INT(context->accumulator);\
-		int result = current < other ? 1 : 0;\
-		context->accumulator = seq::generateValueWrapper(utils::make_unique<seq::IntValue>(result));\
-}
+#define STORE(id) { context->currentFrame->environment[id] = std::move(context->accumulator); }
+#define STORE_ARITH(id) { context->currentFrame->environment[id] = std::make_shared<seq::IntValue>(context->arithmeticAccumulator); }
 
 #define JMP_IF_ZERO(label)	{\
-		if( INT(context->accumulator) == 0 ) {\
+		if( context->arithmeticAccumulator == 0 ) {\
 			context->nextInstruction = label;\
 			break;\
 		}\
 }
 
 #define RET  { context->removeLastFrame(); break;}
-
-#define SUB(id) {\
-		int other = INT(context->currentFrame->environment[id]);\
-		int current = INT(context->accumulator);\
-		int result = current - other;\
-		context->accumulator = seq::generateValueWrapper(utils::make_unique<seq::IntValue>(result));\
-}
-
-#define ADD(id) {\
-		int other = INT(context->currentFrame->environment[id]);\
-		int current = INT(context->accumulator);\
-		int result = current + other;\
-		context->accumulator = seq::generateValueWrapper(utils::make_unique<seq::IntValue>(result));\
-}
 
 #define ALLOC(label, params, size, retLabel) {\
 		if ( params == 0 ) {\
@@ -55,11 +35,11 @@
 			break;\
 		} else\
 			context->accumulator =\
-					seq::generateValueWrapper(utils::make_unique<seq::FunctionApplyValue>(label, params, size));\
+					std::make_shared<seq::FunctionApplyValue>(label, params, size);\
 }
 
 #define ADD_PARAM(id, retLabel) {\
-		auto apply = static_cast<const seq::ApplyValue*>(context->accumulator->getValue());\
+		auto apply = static_cast<seq::ApplyValue*>(context->accumulator.get());\
 		if ( apply->getParamsAvailable() + 1 >= apply->getParamsNeeded() ) {\
 			seq::CallSpecification spec;\
 			apply->prepareCall(&spec);\
@@ -74,9 +54,9 @@
 			break;\
 		} else\
 			context->accumulator =\
-				seq::generateValueWrapper(utils::make_unique<seq::ParamApplyValue>(\
-						std::move(context->accumulator),\
-						std::shared_ptr<seq::ValueWrapper>(context->currentFrame->environment[id])));\
+				std::make_shared<seq::ParamApplyValue>(\
+						std::static_pointer_cast<seq::ApplyValue>(context->accumulator),\
+						std::shared_ptr<seq::Value>(context->currentFrame->environment[id]));\
 }
 #define FINALIZE {\
 		context = nullptr;\

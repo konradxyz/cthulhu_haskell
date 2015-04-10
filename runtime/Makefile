@@ -26,7 +26,7 @@ $(eval $(call obj,seq,seq, gen.h static/seq/seq.h))
 
 
 $(TARGET):	$(OBJS) gen.h
-	$(CXX) -o $(TARGET) $(OBJS) $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 
 
 clean:
