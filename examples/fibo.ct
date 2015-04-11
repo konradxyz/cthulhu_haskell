@@ -4,10 +4,10 @@
 data List a = Nil | Const a (List a) ;
 
 
-map <a b> :: (a -> b) -> List a -> List b :
+map <a, b> :: (a -> b) -> List a -> List b :
 map fun input = case input of
   Nil -> Nil <b> ;
-  Const n tail -> Const (fun n) (map <a b> fun tail);
+  Const n tail -> Const (fun n) (map <a, b> fun tail);
 ;
 
 
@@ -24,18 +24,18 @@ naturalFrom current n = if lt n 1 then
   else
     Const <int> current (naturalFrom (add current 1) (sub n 1)) ;
 
-fold <a b> :: (a -> b -> b) -> b -> List a -> b :
+fold <a, b> :: (a -> b -> b) -> b -> List a -> b :
 fold fun acc input = case input of
   Nil -> acc ;
-  Const n tail -> fold<a b> fun (fun n acc) tail ;
+  Const n tail -> fold<a, b> fun (fun n acc) tail ;
 ;
 
-const <a b> :: a -> b -> a :
+const <a, b> :: a -> b -> a :
 const x y = x;
 
 
 clone <a> :: int -> a -> List a :
-clone n x = map <int a> (const <a int> x) (natural n) ;
+clone n x = map <int, a> (const <a, int> x) (natural n) ;
 
 append <a> :: List a -> List a -> List a :
 append l r = case l of
@@ -44,7 +44,7 @@ append l r = case l of
 ;
 
 concat <a> :: List (List a) -> List a :
-concat = fold <(List a) (List a)> append <a> Nil <a> ;
+concat = fold <List a, List a> append <a> Nil <a> ;
 
 call :: int -> int :
-call n = fold<int int> add 0 (concat <int> (clone <(List int)> 4 (map<int int> fibo (natural n)))) ;
+call n = fold<int, int> add 0 (concat <int> (clone <(List int)> 4 (map<int int> fibo (natural n)))) ;
