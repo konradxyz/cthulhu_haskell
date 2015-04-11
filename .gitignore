@@ -28,3 +28,5 @@
 *.app
 runtime/runtime
 *.swp
+*.hi
+
