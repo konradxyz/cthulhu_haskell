@@ -37,7 +37,7 @@ run v p s = let ts = myLLexer s in case p ts of
                           putStrLn s
            Ok  tree -> do putStrLn "\nParse Successful!"
                           showTree v tree
-                          print $ variants tree 
+                          print $ templates tree 
 
 
 
