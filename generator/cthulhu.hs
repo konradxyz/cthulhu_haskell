@@ -11,7 +11,8 @@ import Skelcthulhu
 import Printcthulhu
 import Abscthulhu
 
-
+import Ast
+import Typechecker
 
 
 import ErrM
@@ -25,10 +26,10 @@ type Verbosity = Int
 putStrV :: Verbosity -> String -> IO ()
 putStrV v s = if v > 1 then putStrLn s else return ()
 
-runFile :: (Print a, Show a) => Verbosity -> ParseFun a -> FilePath -> IO ()
+runFile :: Verbosity -> ParseFun Abscthulhu.Program -> FilePath -> IO ()
 runFile v p f = putStrLn f >> readFile f >>= run v p
 
-run :: (Print a, Show a) => Verbosity -> ParseFun a -> String -> IO ()
+run :: Verbosity -> ParseFun Abscthulhu.Program -> String -> IO ()
 run v p s = let ts = myLLexer s in case p ts of
            Bad s    -> do putStrLn "\nParse              Failed...\n"
                           putStrV v "Tokens:"
@@ -36,6 +37,7 @@ run v p s = let ts = myLLexer s in case p ts of
                           putStrLn s
            Ok  tree -> do putStrLn "\nParse Successful!"
                           showTree v tree
+                          print $ variants tree 
 
 
 
