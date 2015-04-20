@@ -13,6 +13,7 @@ import Abscthulhu
 
 import Ast
 import Typechecker
+import Template
 
 
 import ErrM
@@ -36,8 +37,11 @@ run v p s = let ts = myLLexer s in case p ts of
                           putStrV v $ show ts
                           putStrLn s
            Ok  tree -> do putStrLn "\nParse Successful!"
-                          showTree v tree
-                          print $ templates tree 
+                          showTree v tree 
+                          case (templates tree) of
+                            Left e -> print e
+                            Right r -> print $ variant r
+                          print $ typecheck tree 
 
 
 
