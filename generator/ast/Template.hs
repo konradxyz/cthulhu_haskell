@@ -21,7 +21,7 @@ data FunctionInstance = FunctionInstance { fname :: String, type_params :: [Ast.
   deriving (Show, Eq, Ord)
 
 
-data Global = FunctionGlobal | ConstructorGlobal VariantTemplateConst
+data Global = FunctionGlobal | ConstructorGlobal VariantTemplateConst | BinOp Ast.OpType
   deriving (Show, Eq, Ord)
 
 

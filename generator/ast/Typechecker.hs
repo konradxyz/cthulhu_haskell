@@ -19,7 +19,9 @@ predefined_types = Map.insert "int" Template.Int Map.empty
 operators :: [String]
 operators = ["add", "sub", "lt"]
 
-operators_map = Map.fromList $ zip operators [Ast.Add, Ast.Sub, Ast.Lt]
+operators_ast = [Ast.Add, Ast.Sub, Ast.Lt]
+
+operators_map = Map.fromList $ zip operators operators_ast
 
 type Ident = Abs.Ident
 
@@ -169,8 +171,9 @@ templates program = do
     variants <- mapM (variant_template (get_type vars predefined_types)) values
     funs <- Typechecker.functions (get_type vars predefined_types) program
     let gfuns = (map (\x->(Template.name $ snd x, FunctionGlobal)) $ Map.toList funs)
-        gcons = concat $ map (global_constructors) $ variants in
-        case Utils.unique_v fst snd $ gfuns ++ gcons of
+        gcons = concat $ map (global_constructors) $ variants
+        gops =  zip operators $ map Template.BinOp operators_ast in  
+        case Utils.unique_v fst snd $ gfuns ++ gcons ++ gops of
           Left (e, _, _) -> throwError $ "Multiple definitions of ident " ++ e
           Right global -> do
             return $ Template.Templates funs (Map.fromList $ zip keys variants)  global
