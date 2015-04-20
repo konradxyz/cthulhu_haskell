@@ -40,7 +40,9 @@ run v p s = let ts = myLLexer s in case p ts of
                           showTree v tree 
                           case (templates tree) of
                             Left e -> print e
-                            Right r -> print $ variant r
+                            Right r -> do
+                              print $ variant r
+                              print $ globals r 
                           print $ typecheck tree 
 
 

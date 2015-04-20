@@ -5,8 +5,12 @@ import Data.Maybe
 import qualified Data.Map as Map
 
 unique :: Ord k => (a -> k) -> [a] -> Either (k, a, a)  (Map.Map k a)
-unique key ls = 
-  let pairs = zip (map key ls) ls in
+unique key ls = unique_v key (id::a->a) ls 
+
+
+unique_v :: Ord k => (a -> k) -> (a->b) -> [a] -> Either (k, b, b)  (Map.Map k b)
+unique_v key val ls = 
+  let pairs = zip (map key ls) (map val ls) in
     foldl f (Right Map.empty) pairs
     where f m e = case m of
                   Left e -> Left e

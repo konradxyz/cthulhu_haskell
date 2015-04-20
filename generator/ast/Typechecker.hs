@@ -141,7 +141,13 @@ variant_template :: (String -> [Template.Type] -> Either String Template.Type) -
   Template.VariantTemplate -> Either String Template.VariantTemplateConst
 variant_template f (Template.VariantTemplate name params const) = do
   vconsts <- mapM (variant_constructor (add_template_params (map Abs.Ident params) f)) const
-  return $ Template.VariantTemplateConst name vconsts    
+  return $ Template.VariantTemplateConst name vconsts 
+
+
+
+global_constructors :: Template.VariantTemplateConst -> [(String, Global)]
+global_constructors v =
+  zip (map cname $ vconstructorsc v) (replicate (length $ vconstructorsc v) $ ConstructorGlobal v)  
 
 {-
 
@@ -162,7 +168,12 @@ templates program = do
   let (keys, values) = unzip $ Map.toList vars in do
     variants <- mapM (variant_template (get_type vars predefined_types)) values
     funs <- Typechecker.functions (get_type vars predefined_types) program
-    return $ Template.Templates funs (Map.fromList $ zip keys variants)  Map.empty
+    let gfuns = (map (\x->(Template.name $ snd x, FunctionGlobal)) $ Map.toList funs)
+        gcons = concat $ map (global_constructors) $ variants in
+        case Utils.unique_v fst snd $ gfuns ++ gcons of
+          Left (e, _, _) -> throwError $ "Multiple definitions of ident " ++ e
+          Right global -> do
+            return $ Template.Templates funs (Map.fromList $ zip keys variants)  global
 
 
 
