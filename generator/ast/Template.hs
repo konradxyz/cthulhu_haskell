@@ -38,6 +38,8 @@ data Constructor = Constructor {
 
 data VariantTemplateConst = VariantTemplateConst {
   vnamec :: String,
+  vparamsc :: [String],
+  vconstructors :: [Abs.DataVariant]
   vconstructorsc :: [Constructor]
 } deriving (Show, Eq, Ord)
 

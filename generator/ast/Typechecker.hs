@@ -143,7 +143,7 @@ variant_template :: (String -> [Template.Type] -> Either String Template.Type) -
   Template.VariantTemplate -> Either String Template.VariantTemplateConst
 variant_template f (Template.VariantTemplate name params const) = do
   vconsts <- mapM (variant_constructor (add_template_params (map Abs.Ident params) f)) const
-  return $ Template.VariantTemplateConst name vconsts 
+  return $ Template.VariantTemplateConst name params vconsts 
 
 
 
@@ -256,6 +256,21 @@ assert c msg = if c then return () else throwError msg
 
 typecheck_exp_global :: String -> [Ast.Type] -> [TypedExp] -> FunctionTypechecker TypedExp
 typecheck_exp_global name template_params params = do
+  globals <- asks Template.globals
+  case Map.lookup name globals of
+    Nothing -> throwError $ "Unknown identifier " ++ name
+    Just x -> case x of
+      BinOp op ->  case params of
+        [TypedExp Ast.IntType l, TypedExp Ast.IntType r] -> do
+          assert (null template_params) "Binary operator should not be given template params"
+          return $ TypedExp Ast.IntType (Operator op l r)
+         _ -> throwError "Operator should be given two integer arguments"
+      ConstructorGlobal tp -> do
+        assert (length (vparamsc tp) == length template_params ) "Wrong number of template arguments" 
+        
+        state <- get
+        case 
+   
   case Map.lookup name operators_map of
     Just op -> case params of
       [TypedExp Ast.IntType l, TypedExp Ast.IntType r] -> do

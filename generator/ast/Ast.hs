@@ -14,6 +14,7 @@ data OpType = Add | Sub | Lt
 
 
 data Exp = 
+  Constructor Int [Exp] |
   Operator OpType Exp Exp | 
   Apply Exp Exp |
   Const Int |
