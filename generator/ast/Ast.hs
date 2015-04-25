@@ -5,7 +5,7 @@ data Type = IntType | FunctionType Type Type | VariantType Int
   deriving (Eq, Show, Ord)
 
 data CaseVariant = CaseVariant {
-  constructor :: Int,
+  fields_target :: [Int],
   case_exp    :: Exp
 } deriving (Eq, Show, Ord)
 
@@ -14,13 +14,13 @@ data OpType = Add | Sub | Lt
 
 
 data Exp = 
-  Constructor Int [Exp] |
+  Construct Int [Exp] |
   Operator OpType Exp Exp | 
   Apply Exp Exp |
-  Const Int |
-  Param Int |
+  Const Integer |
   Local Int |
-  Global Int |
+  Global Int [Exp] |
+  Call Int [Exp] |
   Let Int Exp Exp |
   If Exp Exp Exp |
   Case Exp [CaseVariant]
@@ -52,5 +52,5 @@ data VariantSpec = VariantSpec {
   vtemplateParams :: [Type]
 } deriving (Eq, Show, Ord)
 
-data Program = Program { functions :: Map.Map FunctionSpec Function, types :: [Variant] }
+data Program = Program {functions :: Map.Map FunctionSpec Function, types :: Map.Map Int Variant}
   deriving (Eq, Show, Ord)
