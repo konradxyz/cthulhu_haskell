@@ -7,7 +7,7 @@ data List a = Nil | Const a (List a) ;
 map <a, b> :: (a -> b) -> List a -> List b :
 map fun input = case input of
   Nil -> Nil <b> ;
-  Const n tail -> Const (fun n) (map <a, b> fun tail);
+  Const n tail -> Const<b> (fun n) (map <a, b> fun tail);
 ;
 
 
@@ -40,11 +40,14 @@ clone n x = map <int, a> (const <a, int> x) (natural n) ;
 append <a> :: List a -> List a -> List a :
 append l r = case l of
   Nil -> r;
-  Const x tail -> Const x (append <a> tail r) ;
+  Const x tail -> Const<a> x (append <a> tail r) ;
 ;
 
 concat <a> :: List (List a) -> List a :
 concat = fold <List a, List a> append <a> Nil <a> ;
 
+fadd :: int -> int -> int :
+fadd s t = add s t ;
+
 call :: int -> int :
-call n = fold<int, int> add 0 (concat <int> (clone <(List int)> 4 (map<int int> fibo (natural n)))) ;
+call n = fold<int, int> fadd 0 (concat <int> (clone <List int> 4 (map<int, int> fibo (natural n)))) ;

@@ -9,6 +9,8 @@ import Control.Monad.Error
 import Utils
 import Control.Monad.Trans.Reader
 import Control.Monad.Trans.State.Lazy
+import GHC.Exts
+import System.IO.Unsafe
 
 to_string :: Abs.Ident -> String
 to_string (Abs.Ident str) = str
@@ -150,7 +152,7 @@ variant_template f (Template.VariantTemplate name params const) = do
 
 global_constructors :: Template.VariantTemplateConst -> [(String, Global)]
 global_constructors v =
-  zip (map cname $ vconstructorsc v) (replicate (length $ vconstructorsc v) $ ConstructorGlobal v)  
+  zip (map Template.cname $ vconstructorsc v) (replicate (length $ vconstructorsc v) $ ConstructorGlobal v)  
 
 
 templates :: Abs.Program -> Either String Template.Templates
@@ -185,7 +187,7 @@ starting_state = TypecheckerState {
   program = Program Map.empty Map.empty
 } 
 
-type Typechecker = StateT TypecheckerState (ReaderT Template.Templates (Either String))
+type Typechecker = StateT TypecheckerState (ReaderT Template.Templates (ErrorT String IO))
 
 get_add_function_id :: FunctionSpec -> Typechecker Int
 get_add_function_id f = do
@@ -205,14 +207,15 @@ get_add_function_id f = do
 constructor_instance :: [Ast.Type] -> Int -> Template.Constructor -> Typechecker Ast.Constructor  
 constructor_instance tparams id (Template.Constructor name fields) = do
   efields <- mapM  (\x -> type_instance x tparams) fields
-  return $ Ast.Constructor id efields
+  return $ Ast.Constructor id name efields
 
 
 get_add_datatype_id :: VariantTemplateConst -> VariantSpec -> Typechecker Int
 get_add_datatype_id vt vs = do
   vars <- gets variants_done
-  case Map.lookup vs vars of
-    Just r -> return r
+  tio $ putStrLn $ "call " ++ show vs
+  res <- case Map.lookup vs vars of
+    Just r -> tio (print "cached:") >>return r
     Nothing -> do
       prog <- gets program
       let new_id = Map.size vars in do 
@@ -221,14 +224,18 @@ get_add_datatype_id vt vs = do
          cs <- mapM (\(id, c) -> constructor_instance (Ast.vtemplateParams vs) id c) 
            $ zip [0..] $ Template.vconstructorsc vt  
          p <- gets program
+         state <- get
          let npr =  p {types = Map.insert new_id (Ast.Variant new_id cs) $ Ast.types prog} in do
            put $ state { program = npr }
            return new_id
+  tio $ print vs
+  tio $ print res
+  return res
 
 data TypedExp = TypedExp {
   etype :: Ast.Type,
   eexp :: Ast.Exp
-}
+} deriving (Eq, Ord, Show)
 
 
 data FunctionTypecheckerEnv = FunctionTypecheckerEnv {
@@ -240,17 +247,30 @@ data FunctionTypecheckerEnv = FunctionTypecheckerEnv {
 
 type FunctionTypechecker = StateT FunctionTypecheckerEnv Typechecker
 
-{-
-data Expr =
-   EVar Ident
- | EVarTemplate Ident [TypeListElem]
- | ELitInt Integer
- | EApply Expr Expr
- | ELet Ident Expr Expr
- | EIfElse Expr Expr Expr
- | ECase Expr [CaseVariant]
-  deriving (Eq,Ord,Show)
--}
+fio x = lift $ lift $ lift $ lift x
+tio x = lift $ lift $ lift x
+
+with_local :: String -> Ast.Type -> FunctionTypechecker a -> FunctionTypechecker (a, Int)
+with_local name tp op = do
+  old_state <- get
+  fio $ putStrLn $ name ++ ":" ++ show tp
+  let current = next_local old_state
+      new_next = 1 + current
+      new_locals = Map.insert name (TypedExp tp (Ast.Local current)) $ locals old_state
+      state = old_state { locals = new_locals, next_local = new_next } in do
+        put state
+        res <- op
+        s <- get
+        put $ old_state { next_local = next_local s }
+        return (res, current)
+
+with_locals :: [(String, Ast.Type)] -> FunctionTypechecker a -> FunctionTypechecker (a, [Int])
+with_locals [] op = do
+  r <-op
+  return (r, [])
+with_locals ((n,tp) : t) op = do
+  ((r, id), locals) <- with_locals t (with_local n tp op)
+  return (r, (id:locals))
 
 decompose_type :: Ast.Type -> Int -> FunctionTypechecker (Ast.Type, [Ast.Type])
 decompose_type tp n = if n == 0 
@@ -270,8 +290,11 @@ typed_apply function param =
     FunctionType pt rt -> 
       if pt == etype param then
         return $ TypedExp { etype = rt, eexp = Apply (eexp function) (eexp param) } 
-      else
-        throwError "Params inconsistent"
+      else do
+        l <- gets locals
+        throwError $ 
+          "Params inconsistent, expected " ++ show pt ++ " , given " ++ (show $ etype param) 
+          ++ ", function type " ++ show (etype function) ++ " | "++ (show l)
     _ -> throwError "Too many parameters"
 
 assert :: Bool -> String -> FunctionTypechecker ()
@@ -296,7 +319,7 @@ typecheck_exp_global name template_params params = do
         _ -> throwError "Operator should be given two integer arguments"
       ConstructorGlobal tp -> do
         assert (length (vparamsc tp) == length template_params ) $ 
-          "Wrong number of template arguments" 
+          "Wrong number of template arguments given to function '" ++ name ++ "'" 
         id <-  lift $ get_add_datatype_id tp $ VariantSpec (vnamec tp) template_params
         case Template.get_constructor name tp of
           Nothing -> throwError $ "Unknown constructor " ++ name
@@ -320,6 +343,9 @@ typecheck_exp_global name template_params params = do
               params <- mapM (\(t, e) -> assert_type t e) $ zip p_types params
               return $ TypedExp rt (Ast.Global fid params)
 
+return_with_params :: Ast.Exp -> Ast.Type -> [TypedExp] -> FunctionTypechecker TypedExp
+return_with_params e t p = foldM typed_apply (TypedExp t e) p
+
 typecheck_exp :: Abs.Expr -> [TypedExp]
   -> FunctionTypechecker TypedExp
 typecheck_exp (Abs.EVar (Abs.Ident name)) params = do
@@ -332,26 +358,22 @@ typecheck_exp (Abs.EVarTemplate (Abs.Ident name) list_elem) params = do
   t_params <- mapM (\x -> let Abs.RealTypeListElem tp = x in abs_type_instance tp) list_elem
   typecheck_exp_global name t_params params 
 typecheck_exp (Abs.ELitInt n) params =
-  foldM typed_apply (TypedExp Ast.IntType (Ast.Const n)) params 
+  return_with_params (Ast.Const n) Ast.IntType params
 typecheck_exp (Abs.EApply f p) params = do
   tp <- typecheck_exp p []
   typecheck_exp f (tp:params)
 typecheck_exp (Abs.ELet (Abs.Ident name) value ret) params = do
    TypedExp vt vv <- typecheck_exp value []
-   state <- get
-   let n_loc = Map.insert name (TypedExp vt (Ast.Local (next_local state))) (locals state) in do 
-     put $ state { next_local = 1 + next_local state, locals = n_loc }
-     TypedExp rvt rv <- typecheck_exp ret []
-     nstate <- get
-     put $ nstate { locals = Map.delete name (locals nstate) }
-     foldM typed_apply (TypedExp rvt (Ast.Let (next_local state) vv rv)) params
+   (TypedExp rt rv, id) <- with_local name vt (typecheck_exp ret [])
+   return_with_params (Ast.Let id vv rv) rt params
+
 typecheck_exp (Abs.EIfElse condition t f) params = do
   tc <- typecheck_exp condition []
   tt <- typecheck_exp t []
   tf <- typecheck_exp f []
   assert (Ast.IntType == etype tc) "Condition should be integer"
   assert (etype tt == etype tf) "Both branches of if should return values of the same type"
-  foldM typed_apply (TypedExp (etype tt) (Ast.If (eexp tc) (eexp tt) (eexp tf))) params 
+  return_with_params (Ast.If (eexp tc) (eexp tt) (eexp tf)) (etype tt) params
 
 typecheck_exp (Abs.ECase cond opts) params = do
   econs <- typecheck_exp cond []
@@ -360,12 +382,32 @@ typecheck_exp (Abs.ECase cond opts) params = do
       tp <-  lift $ gets program 
       case Map.lookup id $ Ast.types tp of
         Nothing -> throwError "Unknown type"
-        Just x -> throwError "Not yet implemented"
+        Just x -> do
+          cases <- mapM (typecheck_option x) opts
+          case Utils.unique fst cases of
+            Left _ -> throwError "Multiple options for single constructor in case"
+            Right _ -> let sorted = map snd $ sortWith fst cases in
+              case map snd sorted of
+                [] -> throwError "Cases list should not be empty" 
+                (h:t) -> do
+                  mapM (\t -> assert (h == t) "Diffrent return types in cases") t
+                  return_with_params (Ast.Case (eexp econs) $ map fst sorted) h params
     _ -> throwError $ "Condition passed to case instruction is not a variant"  
 
-typecheck_option :: Ast.Variant -> Abs.CaseVariant -> FunctionTypechecker Ast.CaseVariant 
-typecheck_option (Abs.RealCaseVariant const fields exp) = do
-  throwError "Not yet implemented" 
+find_constructor :: String -> [Ast.Constructor] -> FunctionTypechecker Ast.Constructor
+find_constructor name consts = case find (\x -> name == Ast.cname x) consts of
+  Just x -> return x
+  Nothing -> throwError $ "Unknown constructor " ++ name 
+
+
+typecheck_option :: Ast.Variant -> Abs.CaseVariant 
+  -> FunctionTypechecker (Int, (Ast.CaseVariant, Ast.Type))
+typecheck_option (Ast.Variant _ constructors) (Abs.RealCaseVariant const fields exp) = do
+  cons <- find_constructor (to_string const) constructors
+  assert (length (Ast.fields cons) ==  length fields) $
+    "Wrong number of parameters in case variant"
+  (te, locs) <- with_locals (zip (map to_string fields) $ Ast.fields cons) $ typecheck_exp exp []
+  return (Ast.cid cons, (Ast.CaseVariant locs $ eexp te, etype te))
 
 abs_type_instance :: Abs.Type -> FunctionTypechecker Ast.Type
 abs_type_instance tp = do
@@ -450,10 +492,11 @@ run_typecheck = do
     [] -> gets program
       
 
-typecheck :: Abs.Program -> Either String Ast.Program
+typecheck :: Abs.Program -> IO (Either String Ast.Program)
 typecheck input = do
-  temps <- templates input
-  r <- runReaderT (runStateT run_typecheck starting_state) temps
-  return $ fst r
+  case templates input of
+    Left e -> return $ Left e
+    Right temps -> do
+      runErrorT $ runReaderT (evalStateT run_typecheck starting_state) temps
    
   --TODO: make sure call has good type

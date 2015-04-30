@@ -34,6 +34,7 @@ data Function = Function {
 
 data Constructor = Constructor {
   cid :: Int,
+  cname :: String,
   fields :: [Type]
 } deriving (Eq, Show, Ord)
 
