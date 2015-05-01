@@ -213,9 +213,8 @@ constructor_instance tparams id (Template.Constructor name fields) = do
 get_add_datatype_id :: VariantTemplateConst -> VariantSpec -> Typechecker Int
 get_add_datatype_id vt vs = do
   vars <- gets variants_done
-  tio $ putStrLn $ "call " ++ show vs
   res <- case Map.lookup vs vars of
-    Just r -> tio (print "cached:") >>return r
+    Just r -> return r
     Nothing -> do
       prog <- gets program
       let new_id = Map.size vars in do 
@@ -228,8 +227,6 @@ get_add_datatype_id vt vs = do
          let npr =  p {types = Map.insert new_id (Ast.Variant new_id cs) $ Ast.types prog} in do
            put $ state { program = npr }
            return new_id
-  tio $ print vs
-  tio $ print res
   return res
 
 data TypedExp = TypedExp {
@@ -253,7 +250,6 @@ tio x = lift $ lift $ lift x
 with_local :: String -> Ast.Type -> FunctionTypechecker a -> FunctionTypechecker (a, Int)
 with_local name tp op = do
   old_state <- get
-  fio $ putStrLn $ name ++ ":" ++ show tp
   let current = next_local old_state
       new_next = 1 + current
       new_locals = Map.insert name (TypedExp tp (Ast.Local current)) $ locals old_state
@@ -341,7 +337,7 @@ typecheck_exp_global name template_params params = do
             else do 
               (rt, p_types) <- decompose_type ret $ length params
               params <- mapM (\(t, e) -> assert_type t e) $ zip p_types params
-              return $ TypedExp rt (Ast.Global fid params)
+              return $ TypedExp rt (Ast.Global fid (length (Template.params tmpl)) params)
 
 return_with_params :: Ast.Exp -> Ast.Type -> [TypedExp] -> FunctionTypechecker TypedExp
 return_with_params e t p = foldM typed_apply (TypedExp t e) p
@@ -467,7 +463,8 @@ typecheck_function f id = do
                   rstr = show $ etype (fst e) in
                     throwError $ "Wrong return type, expected " ++ rexp ++ ", given " ++ rstr
            else
-              return $ Ast.Function id (length $ Template.params template) (eexp $ fst e))
+              return $ Ast.Function id (length $ Template.params template) 
+								(next_local $ snd e) (eexp $ fst e))
          (\m -> do
            throwError $ "In function " ++ Ast.fname f ++ " " ++ 
              show (Ast.templateParams f) ++ " : " ++  m )

@@ -19,7 +19,7 @@ data Exp =
   Apply Exp Exp |
   Const Integer |
   Local Int |
-  Global Int [Exp] |
+  Global Int Int [Exp] |
   Call Int [Exp] |
   Let Int Exp Exp |
   If Exp Exp Exp |
@@ -29,6 +29,7 @@ data Exp =
 data Function = Function {
   fid  :: Int,
   params_count :: Int,
+  locals_count :: Int,
   exp :: Exp
 } deriving (Eq, Show, Ord)
 
