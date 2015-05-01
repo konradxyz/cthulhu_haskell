@@ -4,7 +4,7 @@ OBJS =
 
 LIBS =
 
-TARGET =	seq
+TARGET =	run
 
 
 all:	$(TARGET)

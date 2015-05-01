@@ -88,8 +88,9 @@ private:
 	unsigned functionInstruction;
 	std::vector<std::shared_ptr<Value>> params;
 public:
-	FunctionApplyValue(unsigned functionLabel, unsigned paramsNeeded, unsigned envSize)
-		: ApplyValue(paramsNeeded, 0, envSize), functionInstruction(functionLabel) {}
+	FunctionApplyValue(unsigned functionLabel, unsigned paramsNeeded, unsigned envSize,
+			std::vector<std::shared_ptr<Value>>&& params)
+		: ApplyValue(paramsNeeded, params.size(), envSize), functionInstruction(functionLabel), params(std::move(params)) {}
 	void prepareCall(CallSpecification* spec) const override {
 		spec->setFunctionInstruction(functionInstruction);
 		spec->setEnvSize(getEnvSize());
@@ -116,6 +117,15 @@ class StructureValue : public Value {
 private:
 	unsigned constructorId;
 	std::vector<std::shared_ptr<Value>> arguments;
+public:
+	StructureValue(unsigned cid, std::vector<std::shared_ptr<Value>>&& params)
+		: constructorId(cid), arguments(std::move(params)) {}
+	std::shared_ptr<Value> getField(unsigned id) {
+		return arguments[id];
+	}
+	unsigned getConstructorId() {
+		return constructorId;
+	}
 };
 
 class IntValue : public Value {

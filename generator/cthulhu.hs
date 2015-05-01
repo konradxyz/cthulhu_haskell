@@ -20,17 +20,25 @@ import SeqGenerator
 import CmdPrinter
 import ErrM
 
-type ParseFun a = [Token] -> Err a
 
-myLLexer = myLexer
+parser = pProgram
 
-type Verbosity = Int
 
-putStrV :: Verbosity -> String -> IO ()
-putStrV v s = if v > 1 then putStrLn s else return ()
+parseFile :: String -> IO(Abscthulhu.Program)
+parseFile fname = do
+  input <- readFile fname
+  case parser $ myLexer input of
+    Bad s -> do
+      putStrLn $ "Could not parse " ++ fname
+      putStrLn s
+      exitFailure
+    Ok tree -> return tree 
 
-runFile :: Verbosity -> ParseFun Abscthulhu.Program -> FilePath -> IO ()
-runFile v p f = putStrLn f >> readFile f >>= run v p
+parseFiles :: [String] -> IO(Abscthulhu.Program)
+parseFiles files = do
+  progs <- mapM parseFile files
+  return $ Abscthulhu.RealProgram $ concat $ 
+    map (\x -> let Abscthulhu.RealProgram p = x in p) progs 
 
 runCmd :: String -> IO()
 runCmd cmd = do
@@ -50,43 +58,29 @@ runCmd cmd = do
       putStrLn "STDERR"
       putStrLn serr
       exitWith code
-               
-
-run :: Verbosity -> ParseFun Abscthulhu.Program -> String -> IO ()
-run v p s = let ts = myLLexer s in case p ts of
-           Bad s    -> do putStrLn "\nParse              Failed...\n"
-                          putStrV v "Tokens:"
-                          putStrV v $ show ts
-                          putStrLn s
-           Ok  tree -> do putStrLn "\nParse Successful!"
-                          showTree v tree 
-                          t <- typecheck tree
-                          case t of
-                            Right x -> do
-                              r <- generate x
-                              print r
-                              out_file <- openFile "runtimes/seq/gen.h" WriteMode 
-                              print_cmds r out_file
-                              hClose out_file
-                              runCmd "cd runtimes/seq; make"
-                            Left err -> do
-                              putStrLn "Typecheck failed:"
-                              putStrLn err
 
 
-
-showTree :: (Show a, Print a) => Int -> a -> IO ()
-showTree v tree
- = do
-      putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
-      putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+run :: [String] -> IO ()
+run file = do
+  prog <- parseFiles ("cthulhu_lib/lib.ct":file)
+  t <- typecheck prog
+  case t of
+    Right x -> do
+      r <- generate x
+      out_file <- openFile "runtimes/seq/gen.h" WriteMode 
+      print_cmds r out_file
+      hClose out_file
+      runCmd "cd runtimes/seq; make"
+      runCmd "cp runtimes/seq/run ."
+    Left err -> do
+      putStrLn "Typecheck failed:"
+      putStrLn err
 
 main :: IO ()
 main = do args <- getArgs
           case args of
-            [] -> hGetContents stdin >>= run 2 pProgram
-            "-s":fs -> mapM_ (runFile 0 pProgram) fs
-            fs -> mapM_ (runFile 2 pProgram) fs
+            [] -> putStrLn "Filename expected"
+            fs -> run fs
 
 
 

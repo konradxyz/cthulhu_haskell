@@ -182,7 +182,7 @@ data TypecheckerState = TypecheckerState {
 starting_state :: TypecheckerState
 starting_state = TypecheckerState {
   functions_done = Map.empty,
-  functions_todo = Map.insert (FunctionSpec "call" []) 0 Map.empty,
+  functions_todo = Map.insert (FunctionSpec "entry_point" []) 0 Map.empty,
   variants_done = Map.empty,
   program = Program Map.empty Map.empty
 } 
@@ -496,4 +496,3 @@ typecheck input = do
     Right temps -> do
       runErrorT $ runReaderT (evalStateT run_typecheck starting_state) temps
    
-  --TODO: make sure call has good type

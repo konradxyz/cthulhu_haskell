@@ -1,0 +1,8 @@
+
+
+id <a> :: a -> a:
+id x = x;
+
+
+entry_point :: int -> int:
+entry_point n = call n;

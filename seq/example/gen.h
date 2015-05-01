@@ -16,11 +16,9 @@
 #define FIBO_2 3
 #define FINAL 4
 
-#define ENV_SIZE 6
-
-std::unique_ptr<seq::Context> generateStartingContext(int param) {
-	return seq::generateStartingContext(param, FIBO, FINAL, ENV_SIZE);
-}
+#define START_ENV_SIZE 6
+#define START_LABEL FIBO
+#define FINAL_LABEL FINAL
 
 void executeContext(seq::Context* context) {
 	while ( context != nullptr ) {
@@ -54,7 +52,7 @@ void executeContext(seq::Context* context) {
 					context->arithmeticAccumulator = INT(context->currentFrame->environment[1])
 										+ INT(context->accumulator);
 				}
-				STORE_ARITH_ACC
+				LOAD_ARITH
 				RET
 			case FINAL:
 				FINALIZE

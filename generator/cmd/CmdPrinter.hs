@@ -4,7 +4,7 @@ module CmdPrinter where
 import Cmd
 import System.IO
 import qualified Data.Map as Map
-
+import Data.List
 
 get_function :: Map.Map Int FunctionCall -> Int -> IO FunctionCall
 get_function m id = case Map.lookup id m of
@@ -17,17 +17,17 @@ show_optype Sub = "SUB"
 show_optype Lt = "LT"
 
 show_arithop :: ArithOp -> String
-show_arithop (Local id) = show id
-show_arithop (Const n) = "ENV_INT(" ++ show n ++ ")"
+show_arithop (Const n) = show n
+show_arithop (Local n) = "ENV_INT(" ++ show n ++ ")"
 show_arithop (Operation op l r) = show_optype op ++ "(" ++ show_arithop l ++ ", " 
 	++  show_arithop r  ++ ")"
 
 print_cmd :: Handle -> Map.Map Int FunctionCall -> Cmd -> IO()
-print_cmd h _ (Load id) = hPutStrLn h $ "LOAD_MOVE(" ++ show id ++ ")"
+print_cmd h _ (Load id) = hPutStrLn h $ "LOAD_COPY(" ++ show id ++ ")"
 print_cmd h _ (AllocParams c) = hPutStrLn h $ "ALLOC_PARAMS(" ++ show c ++ ")"
 print_cmd h f (AllocFunctionEnv id) = do
-	f <- get_function f id
-	hPutStrLn h $ "ALLOC_PARAMS(" ++ show (env_size f) ++ ")" 
+  f <- get_function f id
+  hPutStrLn h $ "ALLOC_PARAMS(" ++ show (env_size f) ++ ")" 
 print_cmd h _ (PrepareParamMove from to) =
 	hPutStrLn h $ "PREPARE_PARAM_MOVE(" ++ show from ++ ", " ++ show to ++ ")"
 print_cmd h _ (JmpIfZero lab) =
@@ -53,17 +53,24 @@ print_cmd h f (Global id) = do
 	f <- get_function f id
 	hPutStrLn h $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
 		++ show (env_size f) ++  ")"
-print_cmd h _ (JmpCase c) = hPutStrLn h $ "JMP_CASE" 
+print_cmd h _ (JmpCase c) = let targets = intercalate " COMMA " $ map show c in do
+	hPutStrLn h $ "JMP_CASE({" ++ targets ++ "})" 
 print_cmd h _ Ret = hPutStrLn h $ "RET" 
 print_cmd h _ Skip = hPutStrLn h $ "SKIP" 
 print_cmd h _ (StoreField from to) = hPutStrLn h $ "STORE_FIELD(" ++ show from 
 	++ "," ++ show to ++ ")"
 print_cmd h _ Finalize = hPutStrLn h $ "FINALIZE" 
 
+print_label :: Handle -> Label -> IO()
+print_label h l = case l of
+  Label id -> hPutStrLn h $ "case " ++  show id ++ ":"
+  NamedLabel id comment -> hPutStrLn h $ "case " ++  show id++ ": /*" ++ comment ++ "*/"
+
+
 print_cmdseq :: Handle -> Map.Map Int FunctionCall -> CmdSeq -> IO()
 print_cmdseq h fc c = do
 	case label c of
-		Just lab -> hPutStrLn h $ "case " ++  show lab ++ ":"
+		Just lab -> print_label h lab
 		Nothing -> return ()
 	print_cmd h fc (cmd c)
 
@@ -87,7 +94,8 @@ print_leave h = mapM_ (hPutStrLn h) [
 		"break;",
 		"}", 
 		"}", 
-		"}"
+		"}",
+		"#endif"
 		]
 
 print_cmds :: Cmds -> Handle -> IO()

@@ -42,11 +42,15 @@ data FunctionCall = FunctionCall {
   fid :: Int,
   flabel :: Int,
   params :: Int,
-  env_size :: Int
+  env_size :: Int,
+  fname :: String
 } deriving (Eq,Ord,Show)
 
+data Label = Label Int | NamedLabel Int String
+  deriving (Eq,Ord,Show)
+
 data CmdSeq = CmdSeq {
-  label :: Maybe Int,
+  label :: Maybe Label,
   cmd :: Cmd
 } deriving (Eq, Ord, Show)
 

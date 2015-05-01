@@ -1,6 +1,13 @@
 #include "gen.h"
+#include "static/seq/seq.h"
 #include <iostream>
 #include <cstdlib>
+
+
+std::unique_ptr<seq::Context> generateStartingContext(int param) {
+	return seq::generateStartingContext(param, START_LABEL, FINAL_LABEL, START_ENV_SIZE);
+}
+
 
 int main(int argc, char *argv[]) {
 	if ( argc < 2 ) {
