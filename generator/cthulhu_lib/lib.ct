@@ -8,7 +8,7 @@ data List a = Cons a (List a) | Nil ;
 map <a, b> :: (a -> b) -> List a -> List b :
 map f l = case l of
   Nil -> Nil <b> ;
-  Cons e t -> Cons <b> (f e) (map f t) ;
+  Cons e t -> Cons <b> (f e) (map<a,b> f t) ;
 ;
 
 replicate <a> :: int -> a -> List a:
@@ -28,6 +28,24 @@ length l = case l of
 
 f_add :: int -> int -> int:
 f_add l r = add l r;
+
+data Pair a b = Pair a b ;
+
+sum :: List int -> int:
+sum l = fold<int,int> f_add 0 l;
+
+natural :: int -> List int:
+natural = naturalFrom 0;
+
+naturalFrom :: int -> int -> List int:
+naturalFrom next max =
+  if lt next max then
+    Cons <int> next (naturalFrom (add 1 next) max)
+  else
+    Nil <int> ;
+
+prepend <a> :: List a -> a -> List a:
+prepend l e = Cons <a> e l;
 
 entry_point :: int -> int:
 entry_point n = call n;

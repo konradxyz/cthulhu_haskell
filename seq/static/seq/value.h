@@ -119,8 +119,6 @@ public:
 	ParamApplyValue(std::shared_ptr<ApplyValue>&& function, std::shared_ptr<Value>&& param)
 		: ApplyValue(*function), function(std::move(function)), param(std::move(param)) {
 		++paramsAvailable;
-		DLOG("paramapplycosn")
-		DLOG(paramsAvailable)
 	}
 	void prepareCall(CallSpecification* spec) const override {
 		function->prepareCall(spec);

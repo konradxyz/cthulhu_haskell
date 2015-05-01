@@ -1,0 +1,16 @@
+
+
+
+rooks :: int -> int -> List int -> int:
+rooks current max prev = 
+  if lt current max then
+    sum (map <List int, int> (rooks (add 1 current) max) 
+      (map <int, List int> (prepend<int> prev) (natural max)))
+  else
+    1;
+
+    
+
+
+call :: int -> int:
+call n = rooks 0 n Nil<int>;

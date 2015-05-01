@@ -2,9 +2,6 @@
 fibo :: int -> int:
 fibo n = if lt n 2 then n else add (fibo (sub n 1)) (fibo (sub n 2));
 
-sum :: List int -> int:
-sum l = fold<int,int> f_add 0 l;
-
 perform <a, b> :: (a -> b) -> a -> b:
 perform f e = f e;
 
