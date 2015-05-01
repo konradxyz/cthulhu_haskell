@@ -11,11 +11,8 @@
 #include <iostream>
 
 
-#define LOG(level, msg) {/* BOOST_LOG_TRIVIAL(level) << msg;*/ std::cerr << msg << std::endl; }
+#define DLOG(msg) { std::cerr << "DLOG: " <<  msg << std::endl; }
 
-#define DLOG(msg) {/* BOOST_LOG_TRIVIAL(level) << msg;*/ std::cerr << "DLOG: " <<  msg << std::endl; }
-
-#define DLOGN(msg) {/* BOOST_LOG_TRIVIAL(level) << msg;*/ std::cerr << msg ; }
 
 #define ASSERT(e) { assert(e); }
 

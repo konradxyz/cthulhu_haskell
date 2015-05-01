@@ -10,6 +10,7 @@
 
 #include "static/seq/data.h"
 #include "static/seq/instructions.h"
+#include "static/utils/logging.h"
 
 
 

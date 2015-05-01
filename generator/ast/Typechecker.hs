@@ -387,6 +387,7 @@ typecheck_exp (Abs.ECase cond opts) params = do
                 [] -> throwError "Cases list should not be empty" 
                 (h:t) -> do
                   mapM (\t -> assert (h == t) "Diffrent return types in cases") t
+                  assert (length sorted == (length $ Ast.constructors x)) "Too little case clauses"
                   return_with_params (Ast.Case (eexp econs) $ map fst sorted) h params
     _ -> throwError $ "Condition passed to case instruction is not a variant"  
 

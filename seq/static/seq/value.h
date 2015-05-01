@@ -8,6 +8,7 @@
 #ifndef ASM_VALUE_H_
 #define ASM_VALUE_H_
 
+#include "static/utils/logging.h"
 #include <vector>
 #include <memory>
 #include <sstream>
@@ -26,6 +27,7 @@ public:
 
 	void setEnvSize(unsigned envSize) {
 		this->envSize = envSize;
+		params.resize(envSize);
 	}
 
 	unsigned getFunctionInstruction() const {
@@ -39,11 +41,18 @@ public:
 	std::vector<std::shared_ptr<Value>>* getParams() {
 		return &params;
 	}
+	void addParam(std::shared_ptr<Value> val) {
+		params[next_param++] = std::move(val);
+	}
+	void setParams(unsigned p) {
+		next_param = p;
+	}
 	~CallSpecification();
 
 private:
 	unsigned functionInstruction;
 	unsigned envSize;
+	unsigned next_param = 0;
 	std::vector<std::shared_ptr<Value>> params;
 
 };
@@ -61,11 +70,12 @@ public:
 class ApplyValue : public Value {
 private:
 	unsigned paramsNeeded;
-	unsigned paramsAvailable;
 	unsigned envSize;
+protected:
+	unsigned paramsAvailable;
 public:
 	ApplyValue(unsigned paramsNeeded, unsigned paramsAvailable, unsigned envSize) :
-			paramsNeeded(paramsNeeded), paramsAvailable(paramsAvailable), envSize(envSize) {
+			paramsNeeded(paramsNeeded),envSize(envSize),  paramsAvailable(paramsAvailable) {
 	}
 
 	unsigned getEnvSize() const {
@@ -94,6 +104,7 @@ public:
 	void prepareCall(CallSpecification* spec) const override {
 		spec->setFunctionInstruction(functionInstruction);
 		spec->setEnvSize(getEnvSize());
+		spec->setParams(params.size());
 		for (unsigned i = 0; i < params.size(); ++i ) {
 			(*spec->getParams())[i] = params[i];
 		}
@@ -106,10 +117,14 @@ private:
 	std::shared_ptr<Value> param;
 public:
 	ParamApplyValue(std::shared_ptr<ApplyValue>&& function, std::shared_ptr<Value>&& param)
-		: ApplyValue(*function), function(std::move(function)), param(std::move(param)) {}
+		: ApplyValue(*function), function(std::move(function)), param(std::move(param)) {
+		++paramsAvailable;
+		DLOG("paramapplycosn")
+		DLOG(paramsAvailable)
+	}
 	void prepareCall(CallSpecification* spec) const override {
 		function->prepareCall(spec);
-		spec->getParams()->push_back(param);
+		spec->addParam(param);
 	}
 };
 

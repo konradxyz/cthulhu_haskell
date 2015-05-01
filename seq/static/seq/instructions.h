@@ -90,19 +90,16 @@
 		if ( apply->getParamsAvailable() + 1 >= apply->getParamsNeeded() ) {\
 			seq::CallSpecification spec;\
 			apply->prepareCall(&spec);\
-			auto previousFrame = context->currentFrame;\
+			spec.addParam(opt(context->currentFrame->environment[id]));\
 			context->currentFrame->nextInstruction = retLabel;\
-			context->allocateFrame(spec.getEnvSize());\
-			for ( unsigned i = 0; i < spec.getParams()->size(); ++i ) {\
-				context->currentFrame->environment[i] = std::move((*spec.getParams())[i]);\
-			}\
-			context->currentFrame->environment[spec.getParams()->size()] = opt(previousFrame->environment[id]);\
+			context->allocateFrame(0);\
+			context->currentFrame->environment = std::move(*spec.getParams());\
 			context->nextInstruction = spec.getFunctionInstruction();\
 			break;\
 		} else\
 			context->accumulator =\
 				std::make_shared<seq::ParamApplyValue>(\
-						std::static_pointer_cast<seq::ApplyValue>(context->accumulator),\
+						std::static_pointer_cast<seq::ApplyValue>(std::move(context->accumulator)),\
 						std::shared_ptr<seq::Value>(context->currentFrame->environment[id]));\
 }
 

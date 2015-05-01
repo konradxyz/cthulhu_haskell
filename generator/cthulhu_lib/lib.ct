@@ -3,6 +3,31 @@
 id <a> :: a -> a:
 id x = x;
 
+data List a = Cons a (List a) | Nil ;
+
+map <a, b> :: (a -> b) -> List a -> List b :
+map f l = case l of
+  Nil -> Nil <b> ;
+  Cons e t -> Cons <b> (f e) (map f t) ;
+;
+
+replicate <a> :: int -> a -> List a:
+replicate n e = if lt n 1 then Nil <a> else Cons <a> e (replicate<a> (sub n 1) e) ;
+
+fold <a, b> :: (a -> b -> b) -> b -> List a -> b:
+fold f start l = case l of
+  Nil -> start;
+  Cons e t -> fold <a, b> f (f e start) t;
+;
+
+length <a> :: List a -> int:
+length l = case l of
+  Nil -> 0;
+  Cons e t -> add 1 (length<a> t);
+;
+
+f_add :: int -> int -> int:
+f_add l r = add l r;
 
 entry_point :: int -> int:
 entry_point n = call n;
