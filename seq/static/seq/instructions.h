@@ -20,6 +20,14 @@
 #define ADD(x, y) ((x) + (y))
 #define SUB(x, y) ((x) - (y))
 #define LT(x, y) ((x) < (y) ? 1 : 0)
+#define LE(x, y) ((x) <= (y) ? 1 : 0)
+#define GE(x, y) ((x) > (y) ? 1 : 0)
+#define GT(x, y) ((x) >= (y) ? 1 : 0)
+#define EQ(x, y) ((x) == (y) ? 1 : 0)
+#define NEQ(x, y) ((x) != (y) ? 1 : 0)
+#define AND(x, y) ((x) && (y))
+#define OR(x, y) ((x) || (y))
+#define MUL(x, y) ((x) * (y))
 
 #define ARITH(x) { context->arithmeticAccumulator = (x); }
 

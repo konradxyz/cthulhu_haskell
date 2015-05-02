@@ -45,7 +45,16 @@ op_ast_to_cmd :: Ast.OpType -> Cmd.OpType
 op_ast_to_cmd Ast.Add = Cmd.Add
 op_ast_to_cmd Ast.Sub = Cmd.Sub
 op_ast_to_cmd Ast.Lt = Cmd.Lt
- 
+op_ast_to_cmd Ast.Le = Cmd.Le
+op_ast_to_cmd Ast.Gt = Cmd.Gt
+op_ast_to_cmd Ast.Ge = Cmd.Ge
+op_ast_to_cmd Ast.Eq = Cmd.Eq
+op_ast_to_cmd Ast.Neq = Cmd.Neq
+op_ast_to_cmd Ast.And = Cmd.And
+op_ast_to_cmd Ast.Or = Cmd.Or
+op_ast_to_cmd Ast.Mul = Cmd.Mul
+
+
 
 
 data TargetedExp = TargetedExp {

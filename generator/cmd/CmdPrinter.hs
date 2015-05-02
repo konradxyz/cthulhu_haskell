@@ -15,6 +15,14 @@ show_optype :: OpType -> String
 show_optype Add = "ADD"
 show_optype Sub = "SUB"
 show_optype Lt = "LT"
+show_optype Le = "LE"
+show_optype Gt = "GT"
+show_optype Ge = "GE"
+show_optype Eq = "EQ"
+show_optype Neq = "NEQ"
+show_optype And = "AND"
+show_optype Or = "OR"
+show_optype Mul = "MUL"
 
 show_arithop :: ArithOp -> String
 show_arithop (Const n) = show n

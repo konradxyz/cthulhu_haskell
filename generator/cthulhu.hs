@@ -66,6 +66,7 @@ run file = do
   t <- typecheck prog
   case t of
     Right x -> do
+      print x
       r <- generate x
       out_file <- openFile "runtimes/seq/gen.h" WriteMode 
       print_cmds r out_file

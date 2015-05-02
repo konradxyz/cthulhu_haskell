@@ -47,5 +47,20 @@ naturalFrom next max =
 prepend <a> :: List a -> a -> List a:
 prepend l e = Cons <a> e l;
 
+
+// TODO: fix bug
+member :: int -> List int -> int:
+member e l = case l of
+  Nil -> 0;
+  Cons el t -> or (eq e el) (member e t);
+;
+
+has_elem <a> :: (a -> int) -> List a -> int:
+has_elem f l = case l of
+  Nil -> 0;
+  Cons el t -> if f el then 1 else has <a> f t;
+;
+
 entry_point :: int -> int:
 entry_point n = call n;
+

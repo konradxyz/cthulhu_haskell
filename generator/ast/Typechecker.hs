@@ -19,9 +19,10 @@ predefined_types :: Map.Map String Template.Type
 predefined_types = Map.insert "int" Template.Int Map.empty
 
 operators :: [String]
-operators = ["add", "sub", "lt"]
+operators = ["add", "sub", "lt", "le", "gt", "ge", "eq", "neq", "and", "or", "mul"]
 
-operators_ast = [Ast.Add, Ast.Sub, Ast.Lt]
+operators_ast = [Ast.Add, Ast.Sub, Ast.Lt, Ast.Le, Ast.Gt, Ast.Ge, Ast.Eq, 
+  Ast.Neq, Ast.And, Ast.Or, Ast.Mul]
 
 operators_map = Map.fromList $ zip operators operators_ast
 
@@ -312,7 +313,9 @@ typecheck_exp_global name template_params params = do
         [TypedExp Ast.IntType l, TypedExp Ast.IntType r] -> do
           assert (null template_params) "Binary operator should not be given template params"
           return $ TypedExp Ast.IntType (Operator op l r)
-        _ -> throwError "Operator should be given two integer arguments"
+        _ -> throwError $ "Operator " ++ show op 
+          ++ " should be given two integer arguments, it is given "
+          ++ show params
       ConstructorGlobal tp -> do
         assert (length (vparamsc tp) == length template_params ) $ 
           "Wrong number of template arguments given to function '" ++ name ++ "'" 
@@ -453,6 +456,10 @@ typecheck_function f id = do
     Just template -> catchError (do
       ftype <- type_instance (Template.ftype template) (Ast.templateParams f) 
       (t_params, ret) <- generate_params (Template.params template) 0 ftype
+      if Template.param_count template == length (Ast.templateParams f) then 
+          return ()
+        else
+          throwError $ "This function should get different number of template parameters"
       let f_state = FunctionTypecheckerEnv {
         locals = t_params,
         next_local = Map.size t_params,

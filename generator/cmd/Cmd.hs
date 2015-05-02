@@ -2,7 +2,7 @@ module Cmd where
 
 import qualified Data.Map as Map
 
-data OpType = Add | Sub | Lt
+data OpType = Add | Sub | Lt | Le | Gt | Ge | Eq | Neq | And | Or | Mul
     deriving (Eq, Ord, Show)
 
 data ArithOp = 

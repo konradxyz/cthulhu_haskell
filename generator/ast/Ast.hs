@@ -1,6 +1,6 @@
 module Ast where
 import qualified Data.Map as Map
-
+import Data.List
 data Type = IntType | FunctionType Type Type | VariantType Int
   deriving (Eq, Show, Ord)
 
@@ -9,7 +9,7 @@ data CaseVariant = CaseVariant {
   case_exp    :: Exp
 } deriving (Eq, Show, Ord)
 
-data OpType = Add | Sub | Lt
+data OpType = Add | Sub | Lt | Le | Gt | Ge | Eq | Neq | And | Or | Mul
   deriving (Eq, Show, Ord)
 
 
@@ -55,4 +55,8 @@ data VariantSpec = VariantSpec {
 } deriving (Eq, Show, Ord)
 
 data Program = Program {functions :: Map.Map FunctionSpec Function, types :: Map.Map Int Variant}
-  deriving (Eq, Show, Ord)
+  deriving (Eq, Ord)
+
+instance Show Program where
+    show (Program f t) = intercalate "\n" $ ["functions:"] ++ (map show $ Map.toList f) ++ 
+                         ["types"] ++  (map show $ Map.toList t)

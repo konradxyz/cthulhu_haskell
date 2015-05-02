@@ -9,8 +9,58 @@ rooks current max prev =
   else
     1;
 
-    
 
+has_duplicates :: List int -> int:
+has_duplicates l = case l of
+  Nil -> 0;
+  Cons e t -> if member e t then 1 else has_duplicates t;
+;
+
+rooks_correct :: int -> int -> List int -> int:
+rooks_correct current max prev = 
+  if lt current max then
+    sum (map <List int, int> (rooks_correct (add 1 current) max) 
+      (map <int, List int> (prepend<int> prev) (natural max)))
+  else
+    if has_duplicates prev then 0 else 1;
+
+
+queens_see_each_other :: int -> int -> int -> int -> int:
+queens_see_each_other xrow xcol yrow ycol = 
+    or 
+      (or (or (eq xrow yrow) (eq xcol ycol))  (eq (sub xrow yrow) (sub xcol ycol)))
+      (eq 0 (add (sub xrow yrow) (sub xcol ycol)));
+
+queen_is_seen_by_any :: int -> int -> int -> List int -> int:
+queen_is_seen_by_any xrow xcol yrow ycols = case ycols of
+  Nil -> 0;
+  Cons ycol ytail -> 
+    if queens_see_each_other xrow xcol yrow ycol 
+      then 1
+      else queen_is_seen_by_any xrow xcol (add yrow 1) ytail;
+;
+
+exists_queen_seen :: int -> List int -> int:
+exists_queen_seen xrow cols = case cols of
+  Nil -> 0;
+  Cons xcol ycols -> 
+    if queen_is_seen_by_any xrow xcol (add xrow 1) ycols 
+      then 1
+      else exists_queen_seen (add xrow 1) ycols;
+;
+
+
+queens_correct :: int -> int -> List int -> int:
+queens_correct current max prev = 
+  if lt current max then
+    sum (map <List int, int> (queens_correct (add 1 current) max) 
+      (map <int, List int> (prepend<int> prev) (natural max)))
+  else
+    if exists_queen_seen 0 prev then 0 else 1;
+
+
+r :: int -> int:
+r n = queens_correct 0 n Nil<int>;
 
 call :: int -> int:
-call n = rooks 0 n Nil<int>;
+call = r ;
