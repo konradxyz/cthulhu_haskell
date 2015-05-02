@@ -22,3 +22,7 @@ exists :: Ord k => [k] -> Map.Map k a -> Maybe k
 exists keys m = case intersect keys (Map.keys m) of
   (h:_) -> Just h
   [] -> Nothing
+
+starts_with :: Eq a => [a] -> [a] -> Bool
+starts_with [] _ = True
+starts_with (h:t) (h2:t2) = h == h2 && starts_with t t2
