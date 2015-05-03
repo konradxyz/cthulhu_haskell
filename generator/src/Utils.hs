@@ -26,3 +26,11 @@ exists keys m = case intersect keys (Map.keys m) of
 starts_with :: Eq a => [a] -> [a] -> Bool
 starts_with [] _ = True
 starts_with (h:t) (h2:t2) = h == h2 && starts_with t t2
+
+check_remove :: Eq a => a -> [a] -> ([a], Bool)
+check_remove _ [] = ([], False)
+check_remove e (h:t) = let (rt, rr) = check_remove e t in
+  if e == h
+    then (rt, True)
+    else (h:rt, rr)
+

@@ -30,6 +30,8 @@ show_arithop (Local n) = "ENV_INT(" ++ show n ++ ")"
 show_arithop (Operation op l r) = show_optype op ++ "(" ++ show_arithop l ++ ", " 
 	++  show_arithop r  ++ ")"
 
+err_cmd cmd =	ioError $ userError $ "Printing " ++ cmd ++ "- should not happen"
+
 print_cmd :: Handle -> Map.Map Int FunctionCall -> Cmd -> IO()
 print_cmd h _ (Load id) = hPutStrLn h $ "LOAD_COPY(" ++ show id ++ ")"
 print_cmd h _ (AllocParams c) = hPutStrLn h $ "ALLOC_PARAMS(" ++ show c ++ ")"
@@ -42,10 +44,15 @@ print_cmd h _ (JmpIfZero lab) =
 	hPutStrLn h $ "JMP_IF_ZERO(" ++ show lab ++ ")"
 print_cmd h _ (Jmp lab) =
 	hPutStrLn h $ "JMP(" ++ show lab ++ ")"
-print_cmd h _ (AddParamMove id) = 
-	ioError $ userError "Printing AddParamMove - should not happen"
+print_cmd h _ (AddParamMove id) = err_cmd "AddParamMove" 
+print_cmd h _ (AddParamMoveParFork id) = err_cmd "AddParamMoveParFork" 
 print_cmd h _ (AddParamMoveWithLabel id lab) = 
 	hPutStrLn h $ "ADD_PARAM_MOVE(" ++ show id ++ ", " ++ show lab ++ ")"
+print_cmd h _ (AddParamMoveParForkWithLabel id lab) =
+	hPutStrLn h $ "ADD_PARAM_MOVE_FORK(" ++ show id ++ ", " ++ show lab ++ ")"
+print_cmd h _ (Wait id) = err_cmd "Wait" 
+print_cmd h _ (WaitWithLabel id lab) = 
+	hPutStrLn h $ "WAIT(" ++ show id ++ ", " ++ show lab ++ ")"
 print_cmd h _ (Arith op) =
 	hPutStrLn h $ "ARITH(" ++ show_arithop op ++ ")"
 print_cmd h _ (StoreArith id) = hPutStrLn h $ "STORE_ARITH(" ++ show id ++ ")" 
@@ -53,14 +60,25 @@ print_cmd h _ LoadArith = hPutStrLn h $ "LOAD_ARITH"
 print_cmd h _ ArithLoadAcc = hPutStrLn h $ "ARITH_LOAD_ACC" 
 print_cmd h _ (Construct id) = hPutStrLn h $ "CONSTRUCT(" ++ show id ++ ")"
 print_cmd h _ (Store id) = hPutStrLn h $ "STORE(" ++ show id ++ ")"
-print_cmd h f (Call id) = ioError $ userError "Call printed - should not happen" 
+print_cmd h f (Call id) = err_cmd "Call"
 print_cmd h f (CallWithLabel id label) = do
 	f <- get_function f id
 	hPutStrLn h $ "CALL(" ++ show (flabel f)  ++ ", " ++ show label ++ ")"
+print_cmd h f (CallFork id) = err_cmd "CallFork"
+print_cmd h f (CallForkWithLabel id label) = do
+	f <- get_function f id
+	hPutStrLn h $ "CALL_FORK(" ++ show (flabel f)  ++ ", " ++ show label ++ ")"
 print_cmd h f (Global id) = do
 	f <- get_function f id
 	hPutStrLn h $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
 		++ show (env_size f) ++  ")"
+print_cmd h f (GlobalPar id) = do
+  f <- get_function f id
+  if Cmd.is_complex f
+    then hPutStrLn h $ "GLOBAL_FORK(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
+           ++ show (env_size f) ++  ")"
+    else hPutStrLn h $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
+           ++ show (env_size f) ++  ")"
 print_cmd h _ (JmpCase c) = let targets = intercalate " COMMA " $ map show c in do
 	hPutStrLn h $ "JMP_CASE({" ++ targets ++ "})" 
 print_cmd h _ Ret = hPutStrLn h $ "RET" 

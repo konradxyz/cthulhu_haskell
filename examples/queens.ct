@@ -59,8 +59,11 @@ queens_correct current max prev =
     if exists_queen_seen 0 prev then 0 else 1;
 
 
+d :: int -> int:
+d n = let trash = map <int,int> (id <int>) Nil <int> in 0;
+
 r :: int -> int:
 r n = queens_correct 0 n Nil<int>;
 
 call :: int -> int:
-call = r ;
+call = d ;

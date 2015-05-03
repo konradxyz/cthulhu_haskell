@@ -19,7 +19,11 @@ data Cmd =
     | JmpIfZero Int
     | Jmp Int
     | AddParamMove Int
+    | AddParamMoveParFork Int
     | AddParamMoveWithLabel Int Int
+    | AddParamMoveParForkWithLabel Int Int
+    | Wait Int
+    | WaitWithLabel Int Int
     | Arith ArithOp
     | StoreArith Int
     | LoadArith
@@ -27,8 +31,11 @@ data Cmd =
     | Construct Int
     | Store Int
     | Call Int
+    | CallFork Int
     | CallWithLabel Int Int
+    | CallForkWithLabel Int Int
     | Global Int
+    | GlobalPar Int
     | StoreField Int Int
     | JmpCase [Int]
     | Ret
@@ -43,7 +50,8 @@ data FunctionCall = FunctionCall {
   flabel :: Int,
   params :: Int,
   env_size :: Int,
-  fname :: String
+  fname :: String,
+  is_complex :: Bool
 } deriving (Eq,Ord,Show)
 
 data Label = Label Int | NamedLabel Int String
