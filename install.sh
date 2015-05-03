@@ -20,3 +20,8 @@ mkdir generator/runtimes/seq_icpc
 cp -rf seq/static generator/runtimes/seq_icpc
 cp seq/_Makefile generator/runtimes/seq_icpc/Makefile
 
+mkdir generator/runtimes/par
+cp -rf par/static generator/runtimes/par
+cp par/Makefile generator/runtimes/par
+
+

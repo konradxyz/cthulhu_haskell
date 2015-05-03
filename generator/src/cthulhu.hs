@@ -70,13 +70,14 @@ run opts file = do
       if par opts
         then do
           r <- ParGenerator.generate x
-          print r
-          print_cmds r stdout
+          out_file <- openFile "runtimes/par/gen.h" WriteMode 
+          print_cmds True r out_file
+          hClose out_file
           return ()
         else do
           r <- SeqGenerator.generate x
           out_file <- openFile "runtimes/seq/gen.h" WriteMode 
-          print_cmds r out_file
+          print_cmds False r out_file
           hClose out_file
           runCmd "cd runtimes/seq; make"
           runCmd "cp runtimes/seq/run ."

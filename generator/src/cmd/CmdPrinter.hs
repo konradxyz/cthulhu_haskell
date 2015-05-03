@@ -100,19 +100,20 @@ print_cmdseq h fc c = do
 		Nothing -> return ()
 	print_cmd h fc (cmd c)
 
-print_entry :: FunctionCall -> Int -> Handle -> IO()
-print_entry main end h = do
-	mapM_ (hPutStrLn h) $ [
-		"#ifndef CTHULHU_GEN_H_",
-		"#define CTHULHU_GEN_H_",
-		"#include \"static/seq/seq.h\"",
-		"#define START_ENV_SIZE " ++ (show $ env_size main), 
-		"#define START_LABEL " ++ (show $ flabel main),
-		"#define FINAL_LABEL " ++ (show $ end),
-		"void executeContext(seq::Context* context) {",
-		"while ( context != nullptr ) {",
-		"switch (context->nextInstruction) {"
-		]
+print_entry :: Bool -> FunctionCall -> Int -> Handle -> IO()
+print_entry unique main end h = 
+  let ctx_type = if unique then "std::unique_ptr<seq::Context>&&" else "seq::Context*" in
+  	mapM_ (hPutStrLn h) $ [
+	  	"#ifndef CTHULHU_GEN_H_",
+		  "#define CTHULHU_GEN_H_",
+	  	"#define START_ENV_SIZE " ++ (show $ env_size main), 
+		  "#define START_LABEL " ++ (show $ flabel main),
+  		"#define FINAL_LABEL " ++ (show $ end),
+  		"#include \"static/seq/seq.h\"",
+	  	"void executeContext(" ++ ctx_type ++ " context) {",
+		  "while ( context != nullptr ) {",
+  		"switch (context->nextInstruction) {"
+	  	]
 
 print_leave :: Handle -> IO()
 print_leave h = mapM_ (hPutStrLn h) [
@@ -124,8 +125,8 @@ print_leave h = mapM_ (hPutStrLn h) [
 		"#endif"
 		]
 
-print_cmds :: Cmds -> Handle -> IO()
-print_cmds (Cmds cmds fun main end) handle  = do
-	print_entry main end handle
+print_cmds :: Bool -> Cmds -> Handle -> IO()
+print_cmds unique (Cmds cmds fun main end) handle  = do
+	print_entry unique main end handle
 	mapM_ (print_cmdseq handle fun) cmds
 	print_leave handle

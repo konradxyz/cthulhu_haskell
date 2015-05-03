@@ -86,17 +86,17 @@ acc_need ArithNeed = return $ m_nl [ArithLoadAcc]
 
 
 
-gather_binary :: Exp -> FunctionGenerator (ArithOp, [TargetedExp])
+gather_binary :: Exp -> FunctionGenerator (ArithOp, [TargetedExp], [Int])
 gather_binary e = case e of
   Operator op l r -> do
-    (la, lt) <- gather_binary l
-    (ra, rt) <- gather_binary r
-    return (Operation (op_ast_to_cmd op) la ra, lt ++ rt)
-  Ast.Const n -> return $ (Cmd.Const n, [])
-  Ast.Local id -> return $ (Cmd.Local id, [])
+    (la, lt, ll) <- gather_binary l
+    (ra, rt, rl) <- gather_binary r
+    return (Operation (op_ast_to_cmd op) la ra, lt ++ rt, ll ++ rl)
+  Ast.Const n -> return $ (Cmd.Const n, [], [])
+  Ast.Local id -> return $ (Cmd.Local id, [], [id])
   _ -> do
     id <- alloc_local
-    return $ (Cmd.Local id, [TargetedExp e id])
+    return $ (Cmd.Local id, [TargetedExp e id], [])
  
 
 to_cmd_with_label :: Cmd -> Maybe (Int -> Cmd)

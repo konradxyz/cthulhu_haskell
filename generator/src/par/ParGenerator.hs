@@ -64,11 +64,12 @@ is_complex_call id = do
 
 handle_int :: Exp -> NeedType -> Bool -> FunctionGenerator ([CmdSeq], Bool)
 handle_int e nt has_complex = do
-    (bin, other) <- gather_binary e 
+    (bin, other, locs) <- gather_binary e 
     (cmds, stricts) <- prepare_parameters other ToEnv has_complex
     need <- arith_need nt
-    let non_strict = map (\x -> Wait $ ttarget $ fst x) $ filter (not.snd) $ zip other stricts in
-      return (cmds ++ map no_label (non_strict ++ [Arith bin]) ++ need, True)
+    let non_strict = map (\x -> Wait $ ttarget $ fst x) $ filter (not.snd) $ zip other stricts 
+        wait_locals = map Wait $ nub locs in
+      return (cmds ++ map no_label (non_strict ++ wait_locals ++ [Arith bin]) ++ need, True)
 
 prepare_parameters :: [TargetedExp] -> (Int -> NeedType) -> Bool 
   -> FunctionGenerator ([CmdSeq], [Bool])

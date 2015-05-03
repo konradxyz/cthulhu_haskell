@@ -1,0 +1,35 @@
+CXXFLAGS =	 -O2 -Wall -std=c++0x -I. -pthread
+
+OBJS =
+
+LIBS =
+
+TARGET =	run
+
+
+all:	$(TARGET)
+
+# $1 - directory, $2, -name $3 - headers
+define obj
+$(info $1/$2)
+OBJS += static/$(1)/$(2).o
+static/$(1)/$(2).o: static/$(1)/$(2).cpp static/$(1)/$(2).h $3
+	$(CXX) $(CXXFLAGS) -c -o static/$1/$2.o static/$1/$2.cpp
+endef
+
+
+$(eval $(call obj,seq,context,static/seq/value.h))
+
+$(eval $(call obj,seq,value, static/seq/value.h))
+
+$(eval $(call obj,seq,taskqueue, static/seq/value.h))
+
+$(eval $(call obj,seq,seq, gen.h static/seq/seq.h  static/seq/value.h static/seq/instructions.h))
+
+
+$(TARGET):	$(OBJS)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+
+
+clean:
+	rm -f $(OBJS) $(TARGET)

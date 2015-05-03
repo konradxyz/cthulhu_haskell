@@ -10,7 +10,7 @@ import System.IO
 
 handle_int :: Exp -> NeedType -> FunctionGenerator [CmdSeq]
 handle_int e nt = do
-    (bin, other) <- gather_binary e 
+    (bin, other, _) <- gather_binary e 
     res <- mapM (\te -> generate_exp (texp te) (ToEnv $ ttarget te)) other
     need <- arith_need nt
     return $ concat res ++ [no_label $ Arith bin] ++ need

@@ -60,10 +60,10 @@ queens_correct current max prev =
 
 
 d :: int -> int:
-d n = let trash = map <int,int> (id <int>) Nil <int> in 0;
+d n = sum (Cons<int> 0 (Cons <int> 1 Nil<int>));
 
 r :: int -> int:
 r n = queens_correct 0 n Nil<int>;
 
 call :: int -> int:
-call = d ;
+call = r ;
