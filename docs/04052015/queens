@@ -1,0 +1,95 @@
+queens 8 - students:
+seq:
+[kp306410@students generator]$ time ./run 8
+92
+
+real	2m29.099s
+user	2m29.093s
+sys	0m0.007s
+
+
+
+
+[kp306410@students generator]$ time ./run 8 1
+92
+
+real	5m42.919s
+user	5m42.907s
+sys	0m0.010s
+
+
+
+[kp306410@students generator]$ time ./run 8 2
+92
+
+real	3m4.083s
+user	6m7.440s
+sys	0m0.693s
+
+[kp306410@students generator]$ time ./run 8 3
+92
+
+real	1m59.935s
+user	5m56.890s
+sys	0m2.810s
+
+
+
+
+
+[kp306410@students generator]$ time ./run 8 4
+92
+
+real	1m38.929s
+user	6m28.963s
+sys	0m6.467s
+
+[kp306410@students generator]$ time ./run 8 5
+92
+
+real	1m32.504s
+user	7m29.590s
+sys	0m12.297s
+
+
+
+[kp306410@students generator]$ time ./run 8 6
+92
+
+real	1m26.161s
+user	8m18.217s
+sys	0m17.673s
+
+
+[kp306410@students generator]$ time ./run 8 8
+92
+
+real	1m14.396s
+user	9m19.130s
+sys	0m32.847s
+
+
+[kp306410@students generator]$ time ./run 8 9
+92
+
+real	1m18.618s
+user	10m56.257s
+sys	0m46.513s
+
+
+[kp306410@students generator]$ time ./run 8 10
+92
+
+real	1m17.478s
+user	11m34.810s
+sys	1m11.930s
+
+
+
+[kp306410@students generator]$ time ./run 8 16
+92
+
+real	1m19.400s
+user	13m49.580s
+sys	6m48.087s
+

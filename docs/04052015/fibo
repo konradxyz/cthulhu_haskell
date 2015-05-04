@@ -1,0 +1,48 @@
+lenovo:
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 20000                               
+1392289440
+
+real    1m20.644s
+user    1m20.063s
+sys     0m0.068s
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ ./cthulhu ../examples/fibo.ct --par
+Options {icpc = False, par = True}
+Running cd runtimes/par; make
+Command succeeded
+Running cp runtimes/par/run .
+Command succeeded
+
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 20000 3
+1392289440
+
+real    1m1.555s
+user    3m4.357s
+sys     0m0.036s
+
+
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$  time ./run 20000 4
+1392289440
+
+real    1m3.927s
+user    4m15.100s
+sys     0m0.064s
+
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 20000 5
+1392289440
+
+real    0m50.905s
+user    4m5.582s
+sys     0m0.192s
+
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 20000 6                             
+1392289440
+
+real    0m49.605s
+user    4m30.975s
+sys     0m0.310s
+

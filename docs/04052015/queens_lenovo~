@@ -1,0 +1,25 @@
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 8
+92
+
+real	1m7.350s
+user	1m7.300s
+sys	0m0.000s
+
+
+
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 8 4
+92
+
+real	0m30.235s
+user	1m59.878s
+sys	0m0.720s
+
+
+kp@kp-Lenovo-IdeaPad-Y580:~/cthulhu/haskell/generator$ time ./run 8 6
+92
+
+real	0m27.381s
+user	2m40.438s
+sys	0m1.561s
+

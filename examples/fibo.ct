@@ -5,5 +5,9 @@ fibo_a n p l = if lt n 1 then p else fibo_a (sub n 1) l (add l p);
 fibo :: int -> int :
 fibo n = if lt n 2 then n else fibo_a n 0 1 ;
 
+
+fibo_c :: int -> int -> int :
+fibo_c n t = fibo n;
+
 call :: int -> int :
-call = fibo ; 
+call n = sum (map <int, int> (fibo_c n) (natural n)) ; 
