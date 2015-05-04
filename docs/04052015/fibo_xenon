@@ -1,0 +1,45 @@
+[intel@academics1-mic1 ~]$ time ./run 10000  10
+-596510032
+
+real	0m47.090s
+user	7m32.830s
+sys	0m1.800s
+[intel@academics1-mic1 ~]$ time ./run 10000  20
+-596510032
+
+real	0m26.115s
+user	7m39.270s
+sys	0m3.260s
+[intel@academics1-mic1 ~]$ time ./run 10000  40
+-596510032
+
+real	0m18.583s
+user	7m46.340s
+sys	0m7.180s
+[intel@academics1-mic1 ~]$ time ./run 10000  80
+-596510032
+
+real	0m23.512s
+user	8m47.760s
+sys	0m17.500s
+
+
+[intel@academics1-mic1 ~]$ time ./run 20000  80
+1392289440
+
+real	0m58.141s
+user	35m10.450s
+sys	0m32.240s
+[intel@academics1-mic1 ~]$ time ./run 20000  40
+1392289440
+
+real	1m0.857s
+user	31m16.550s
+sys	0m14.290s
+[intel@academics1-mic1 ~]$ time ./run 20000  20
+1392289440
+
+real	1m40.108s
+user	30m54.110s
+sys	0m7.240s
+

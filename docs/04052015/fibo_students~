@@ -1,0 +1,7 @@
+[kp306410@students generator]$ time ./run 10000
+-596510032
+
+real	0m58.180s
+user	0m58.147s
+sys	0m0.030s
+

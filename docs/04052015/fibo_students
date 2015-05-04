@@ -1,0 +1,55 @@
+[kp306410@students generator]$ time ./run 10000
+-596510032
+
+real	0m58.180s
+user	0m58.147s
+sys	0m0.030s
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[kp306410@students generator]$ for S in `seq 4 8`; do echo $S; time ./run 10000 $S; done
+4
+-596510032
+
+real	0m28.772s
+user	1m54.703s
+sys	0m0.043s
+5
+-596510032
+
+real	0m21.793s
+user	1m48.353s
+sys	0m0.047s
+6
+-596510032
+
+real	0m17.462s
+user	1m44.023s
+sys	0m0.043s
+7
+-596510032
+
+real	0m13.904s
+user	1m36.257s
+sys	0m0.047s
+8
+-596510032
+
+real	0m11.213s
+user	1m28.187s
+sys	0m0.047s
+
