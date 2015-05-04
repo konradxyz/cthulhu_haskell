@@ -6,6 +6,7 @@ LIBS =
 
 TARGET =	run
 
+CXX=icpc -mmic
 
 all:	$(TARGET)
 

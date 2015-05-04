@@ -73,7 +73,11 @@ run opts file = do
           out_file <- openFile "runtimes/par/gen.h" WriteMode 
           print_cmds True r out_file
           hClose out_file
-          return ()
+          runCmd "cd runtimes/par; make"
+          runCmd "cp runtimes/par/run ."
+          if icpc opts
+            then runCmd "scripts/par_prepare_icpc.sh"
+            else return ()
         else do
           r <- SeqGenerator.generate x
           out_file <- openFile "runtimes/seq/gen.h" WriteMode 

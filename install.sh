@@ -24,4 +24,8 @@ mkdir generator/runtimes/par
 cp -rf par/static generator/runtimes/par
 cp par/Makefile generator/runtimes/par
 
+mkdir generator/runtimes/par_icpc
+cp -rf par/static generator/runtimes/par_icpc
+cp par/_Makefile generator/runtimes/par_icpc/Makefile
+
 
