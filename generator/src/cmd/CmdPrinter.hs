@@ -30,75 +30,76 @@ show_arithop (Local n) = "ENV_INT(" ++ show n ++ ")"
 show_arithop (Operation op l r) = show_optype op ++ "(" ++ show_arithop l ++ ", " 
 	++  show_arithop r  ++ ")"
 
-err_cmd cmd =	ioError $ userError $ "Printing " ++ cmd ++ "- should not happen"
+err_cmd cmd = ioError $ userError $ "Printing " ++ cmd ++ "- should not happen"
 
-print_cmd :: Handle -> Map.Map Int FunctionCall -> Cmd -> IO()
-print_cmd h _ (Load id) = hPutStrLn h $ "LOAD_COPY(" ++ show id ++ ")"
-print_cmd h _ (AllocParams c) = hPutStrLn h $ "ALLOC_PARAMS(" ++ show c ++ ")"
-print_cmd h f (AllocFunctionEnv id) = do
+print_cmd :: Map.Map Int FunctionCall -> Cmd -> IO String
+print_cmd _ (Load id) = return $ "LOAD_COPY(" ++ show id ++ ")"
+print_cmd _ (AllocParams c) = return $ "ALLOC_PARAMS(" ++ show c ++ ")"
+print_cmd f (AllocFunctionEnv id) = do
   f <- get_function f id
-  hPutStrLn h $ "ALLOC_PARAMS(" ++ show (env_size f) ++ ")" 
-print_cmd h _ (PrepareParamMove from to) =
-	hPutStrLn h $ "PREPARE_PARAM_MOVE(" ++ show from ++ ", " ++ show to ++ ")"
-print_cmd h _ (JmpIfZero lab) =
-	hPutStrLn h $ "JMP_IF_ZERO(" ++ show lab ++ ")"
-print_cmd h _ (Jmp lab) =
-	hPutStrLn h $ "JMP(" ++ show lab ++ ")"
-print_cmd h _ (AddParamMove id) = err_cmd "AddParamMove" 
-print_cmd h _ (AddParamMoveParFork id) = err_cmd "AddParamMoveParFork" 
-print_cmd h _ (AddParamMoveWithLabel id lab) = 
-	hPutStrLn h $ "ADD_PARAM_MOVE(" ++ show id ++ ", " ++ show lab ++ ")"
-print_cmd h _ (AddParamMoveParForkWithLabel id lab) =
-	hPutStrLn h $ "ADD_PARAM_MOVE_FORK(" ++ show id ++ ", " ++ show lab ++ ")"
-print_cmd h _ (Wait id) = err_cmd "Wait" 
-print_cmd h _ (WaitWithLabel id lab) = 
-	hPutStrLn h $ "WAIT(" ++ show id ++ ", " ++ show lab ++ ")"
-print_cmd h _ (Arith op) =
-	hPutStrLn h $ "ARITH(" ++ show_arithop op ++ ")"
-print_cmd h _ (StoreArith id) = hPutStrLn h $ "STORE_ARITH(" ++ show id ++ ")" 
-print_cmd h _ LoadArith = hPutStrLn h $ "LOAD_ARITH" 
-print_cmd h _ ArithLoadAcc = hPutStrLn h $ "ARITH_LOAD_ACC" 
-print_cmd h _ (Construct id) = hPutStrLn h $ "CONSTRUCT(" ++ show id ++ ")"
-print_cmd h _ (Store id) = hPutStrLn h $ "STORE(" ++ show id ++ ")"
-print_cmd h f (Call id) = err_cmd "Call"
-print_cmd h f (CallWithLabel id label) = do
+  return $ "ALLOC_PARAMS(" ++ show (env_size f) ++ ")" 
+print_cmd _ (PrepareParamMove from to) =
+	return $ "PREPARE_PARAM_MOVE(" ++ show from ++ ", " ++ show to ++ ")"
+print_cmd _ (JmpIfZero lab) =
+	return $ "JMP_IF_ZERO(" ++ show lab ++ ")"
+print_cmd _ (Jmp lab) =
+	return $ "JMP(" ++ show lab ++ ")"
+print_cmd _ (AddParamMove id) = err_cmd "AddParamMove" 
+print_cmd _ (AddParamMoveParFork id) = err_cmd "AddParamMoveParFork" 
+print_cmd _ (AddParamMoveWithLabel id lab) = 
+	return $ "ADD_PARAM_MOVE(" ++ show id ++ ", " ++ show lab ++ ")"
+print_cmd _ (AddParamMoveParForkWithLabel id lab) =
+	return $ "ADD_PARAM_MOVE_FORK(" ++ show id ++ ", " ++ show lab ++ ")"
+print_cmd _ (Wait id) = err_cmd "Wait" 
+print_cmd _ (WaitWithLabel id lab) = 
+	return $ "WAIT(" ++ show id ++ ", " ++ show lab ++ ")"
+print_cmd _ (Arith op) =
+	return $ "ARITH(" ++ show_arithop op ++ ")"
+print_cmd _ (StoreArith id) = return $ "STORE_ARITH(" ++ show id ++ ")" 
+print_cmd _ LoadArith = return $ "LOAD_ARITH" 
+print_cmd _ ArithLoadAcc = return $ "ARITH_LOAD_ACC" 
+print_cmd _ (Construct id) = return $ "CONSTRUCT(" ++ show id ++ ")"
+print_cmd _ (Store id) = return $ "STORE(" ++ show id ++ ")"
+print_cmd f (Call id) = err_cmd "Call"
+print_cmd f (CallWithLabel id label) = do
 	f <- get_function f id
-	hPutStrLn h $ "CALL(" ++ show (flabel f)  ++ ", " ++ show label ++ ")"
-print_cmd h f (CallFork id) = err_cmd "CallFork"
-print_cmd h f (CallForkWithLabel id label) = do
+	return $ "CALL(" ++ show (flabel f)  ++ ", " ++ show label ++ ")"
+print_cmd f (CallFork id) = err_cmd "CallFork"
+print_cmd f (CallForkWithLabel id label) = do
 	f <- get_function f id
-	hPutStrLn h $ "CALL_FORK(" ++ show (flabel f)  ++ ", " ++ show label ++ ")"
-print_cmd h f (Global id) = do
+	return $ "CALL_FORK(" ++ show (flabel f)  ++ ", " ++ show label ++ ")"
+print_cmd f (Global id) = do
 	f <- get_function f id
-	hPutStrLn h $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
+	return $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
 		++ show (env_size f) ++  ")"
-print_cmd h f (GlobalPar id) = do
+print_cmd f (GlobalPar id) = do
   f <- get_function f id
   if Cmd.is_complex f
-    then hPutStrLn h $ "GLOBAL_FORK(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
+    then return $ "GLOBAL_FORK(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
            ++ show (env_size f) ++  ")"
-    else hPutStrLn h $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
+    else return $ "GLOBAL(" ++ show (flabel f) ++ ", " ++ show (params f) ++ ", " 
            ++ show (env_size f) ++  ")"
-print_cmd h _ (JmpCase c) = let targets = intercalate " COMMA " $ map show c in do
-	hPutStrLn h $ "JMP_CASE({" ++ targets ++ "})" 
-print_cmd h _ Ret = hPutStrLn h $ "RET" 
-print_cmd h _ Skip = hPutStrLn h $ "SKIP" 
-print_cmd h _ (StoreField from to) = hPutStrLn h $ "STORE_FIELD(" ++ show from 
-	++ "," ++ show to ++ ")"
-print_cmd h _ Finalize = hPutStrLn h $ "FINALIZE" 
+print_cmd _ (JmpCase c) = let targets = intercalate " COMMA " $ map show c in do
+  return $ "JMP_CASE({" ++ targets ++ "})" 
+print_cmd _ Ret = return "RET" 
+print_cmd _ Skip = return "SKIP" 
+print_cmd _ (StoreField from to) = return $ "STORE_FIELD(" ++ show from ++ "," ++ show to ++ ")"
+print_cmd _ Finalize = return "FINALIZE" 
 
-print_label :: Handle -> Label -> IO()
-print_label h l = case l of
-  Label id -> hPutStrLn h $ "case " ++  show id ++ ":"
-  NamedLabel id comment -> hPutStrLn h $ "case " ++  show id++ ": /*" ++ comment ++ "*/"
+print_label :: Handle -> Int -> IO()
+print_label h l = hPutStrLn h $ "case " ++  show l ++ ":"
 
 
 print_cmdseq :: Handle -> Map.Map Int FunctionCall -> CmdSeq -> IO()
 print_cmdseq h fc c = do
-	case label c of
-		Just lab -> print_label h lab
-		Nothing -> return ()
-	print_cmd h fc (cmd c)
+  case label c of
+    Just lab -> print_label h lab
+    Nothing -> return ()
+  cmd_print <- print_cmd fc (cmd c)
+  comment_print <- case comment c of
+    Just comment -> return $ "// " ++ comment
+    Nothing -> return ""
+  hPutStrLn h (cmd_print ++ comment_print)
 
 print_entry :: Bool -> FunctionCall -> Int -> Handle -> IO()
 print_entry unique main end h = 

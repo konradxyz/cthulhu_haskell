@@ -1,30 +1,168 @@
 #ifndef CTHULHU_GEN_H_
 #define CTHULHU_GEN_H_
 #define START_ENV_SIZE 2
-#define START_LABEL 2
-#define FINAL_LABEL 4
+#define START_LABEL 8
+#define FINAL_LABEL 27
 #include "static/seq/seq.h"
 void executeContext(std::unique_ptr<seq::Context>&& context) {
 while ( context != nullptr ) {
 switch (context->nextInstruction) {
-case 0: /*call*/
-SKIP
-WAIT(0, 1)
-case 1:
-SKIP
+case 0:
+SKIP// call
 LOAD_COPY(0)
-RET
-case 2: /*entry_point*/
+STORE(8)
+ALLOC_PARAMS(5)
+PREPARE_PARAM_MOVE(8, 0)
+CALL_FORK(25, 7)
+case 7:
 SKIP
-LOAD_COPY(0)
 STORE(1)
-ALLOC_PARAMS(1)
-PREPARE_PARAM_MOVE(1, 0)
-CALL(0, 3)
+LOAD_COPY(0)
+STORE(7)
+ALLOC_PARAMS(5)
+PREPARE_PARAM_MOVE(7, 0)
+CALL_FORK(25, 6)
+case 6:
+SKIP
+STORE(2)
+LOAD_COPY(0)
+STORE(6)
+ALLOC_PARAMS(5)
+PREPARE_PARAM_MOVE(6, 0)
+CALL_FORK(25, 5)
+case 5:
+SKIP
+STORE(3)
+LOAD_COPY(0)
+STORE(5)
+ALLOC_PARAMS(5)
+PREPARE_PARAM_MOVE(5, 0)
+CALL(25, 4)
+case 4:
+SKIP
+STORE(4)
+WAIT(1, 3)
 case 3:
 SKIP
+WAIT(2, 2)
+case 2:
+SKIP
+WAIT(3, 1)
+case 1:
+SKIP
+ARITH(ADD(ADD(ENV_INT(1), ENV_INT(2)), ADD(ENV_INT(3), ENV_INT(4))))
+LOAD_ARITH
 RET
-case 4:
+SKIP// end of function call
+case 8:
+SKIP// entry_point
+LOAD_COPY(0)
+STORE(1)
+ALLOC_PARAMS(9)
+PREPARE_PARAM_MOVE(1, 0)
+CALL(0, 9)
+case 9:
+SKIP
+RET
+SKIP// end of function entry_point
+case 10:
+SKIP// square
+WAIT(1, 24)
+case 24:
+SKIP
+WAIT(3, 23)
+case 23:
+SKIP
+ARITH(LT(ENV_INT(1), ENV_INT(3)))
+JMP_IF_ZERO(13)
+WAIT(2, 22)
+case 22:
+SKIP
+WAIT(3, 21)
+case 21:
+SKIP
+ARITH(LT(ENV_INT(2), ENV_INT(3)))
+JMP_IF_ZERO(11)
+WAIT(0, 20)
+case 20:
+SKIP
+ARITH(ADD(1, ENV_INT(0)))
+STORE_ARITH(4)
+LOAD_COPY(1)
+STORE(5)
+WAIT(2, 19)
+case 19:
+SKIP
+ARITH(ADD(ENV_INT(2), 1))
+STORE_ARITH(6)
+LOAD_COPY(3)
+STORE(7)
+ALLOC_PARAMS(12)
+PREPARE_PARAM_MOVE(4, 0)
+PREPARE_PARAM_MOVE(5, 1)
+PREPARE_PARAM_MOVE(6, 2)
+PREPARE_PARAM_MOVE(7, 3)
+CALL(10, 18)
+case 18:
+SKIP
+RET
+JMP(12)
+case 11:
+SKIP
+LOAD_COPY(0)
+STORE(8)
+WAIT(1, 17)
+case 17:
+SKIP
+ARITH(ADD(ENV_INT(1), 1))
+STORE_ARITH(9)
+ARITH(0)
+STORE_ARITH(10)
+LOAD_COPY(3)
+STORE(11)
+ALLOC_PARAMS(12)
+PREPARE_PARAM_MOVE(8, 0)
+PREPARE_PARAM_MOVE(9, 1)
+PREPARE_PARAM_MOVE(10, 2)
+PREPARE_PARAM_MOVE(11, 3)
+CALL(10, 16)
+case 16:
+SKIP
+RET
+case 12:
+SKIP
+JMP(14)
+case 13:
+SKIP
+WAIT(0, 15)
+case 15:
+SKIP
+LOAD_COPY(0)
+RET
+case 14:
+SKIP
+SKIP// end of function square
+case 25:
+SKIP// square_n
+ARITH(0)
+STORE_ARITH(1)
+ARITH(0)
+STORE_ARITH(2)
+ARITH(0)
+STORE_ARITH(3)
+LOAD_COPY(0)
+STORE(4)
+ALLOC_PARAMS(12)
+PREPARE_PARAM_MOVE(1, 0)
+PREPARE_PARAM_MOVE(2, 1)
+PREPARE_PARAM_MOVE(3, 2)
+PREPARE_PARAM_MOVE(4, 3)
+CALL(10, 26)
+case 26:
+SKIP
+RET
+SKIP// end of function square_n
+case 27:
 FINALIZE
 default:
 break;

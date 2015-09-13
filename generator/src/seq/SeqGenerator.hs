@@ -29,7 +29,7 @@ generate_case :: CaseVariant -> NeedType -> Int -> Int -> FunctionGenerator [Cmd
 generate_case (CaseVariant f e) nt ml el = do
   let fields_move = map (\(fid, target) -> no_label $ StoreField fid target) $ zip [0..] f in do
     ce <- generate_exp e nt
-    return $ [CmdSeq (Just $ Label ml) Skip] ++ fields_move ++ ce ++ [no_label $ Jmp el]
+    return $ [CmdSeq (Just ml) Skip Nothing] ++ fields_move ++ ce ++ [no_label $ Jmp el]
     
 
 generate_exp :: Exp -> NeedType -> FunctionGenerator [CmdSeq]
@@ -59,14 +59,14 @@ generate_exp e nt = case e of
     cf <- generate_exp f nt
     le <- alloc_label
     return $ cc ++ [no_label $ JmpIfZero lf] ++ ct ++ [no_label $ Jmp le]
-       ++ [CmdSeq (Just $ Label lf) Skip] ++  cf ++ [CmdSeq (Just $ Label le) Skip]
+       ++ [CmdSeq (Just lf) Skip Nothing] ++  cf ++ [CmdSeq (Just le) Skip Nothing]
   Ast.Case value cases -> do
     cval <- generate_exp value $ Acc
     end_label <- alloc_label
     lcases <- mapM (\x -> alloc_label >>= \l -> return (x, l)) cases
     ccases <- mapM (\(mc, ml) -> generate_case mc nt ml end_label) lcases 
     return $ cval ++ [no_label $ JmpCase $ map snd lcases] ++ concat ccases 
-      ++ [CmdSeq (Just $ Label end_label) Skip] 
+      ++ [CmdSeq (Just end_label) Skip Nothing] 
     
 
 
@@ -75,7 +75,7 @@ generate_function spec (Ast.Function fid params locals exp) = do
   flable <- s_alloc_label
   ce <- runStateT (generate_exp exp Return) $ FunctionGeneratorState locals
   ace <- assign_apply_labels $ fst ce
-  return ((CmdSeq (Just $ NamedLabel flable $ Ast.fname spec) Skip:ace), 
+  return ((CmdSeq (Just flable) Skip (Just $ "function " ++ Ast.fname spec) :ace), 
     FunctionCall fid flable params (next_local $ snd ce) (Ast.fname spec) False)
 
 generate_program :: Program -> SeqGenerator Cmds
@@ -84,8 +84,8 @@ generate_program prog = do
   let calls =  Map.fromList $ map (\(_, x) -> (Cmd.fid x, x)) cmds in do
     final_label <- s_alloc_label
     case Map.lookup 0 calls of
-      Just x -> return $ Cmds ((concat $ map fst cmds) ++ [CmdSeq (Just $ Label final_label) 
-        Finalize]) calls x final_label
+      Just x -> return $ Cmds ((concat $ map fst cmds) ++ [CmdSeq (Just final_label) 
+        Finalize Nothing]) calls x final_label
       Nothing -> sio $ ioError $ userError "Unknown function - should not happen" 
 
 generate :: Program -> IO Cmds

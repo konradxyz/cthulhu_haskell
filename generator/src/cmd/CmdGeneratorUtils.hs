@@ -21,7 +21,6 @@ data FunctionGeneratorState = FunctionGeneratorState {
 
 type FunctionGenerator = StateT FunctionGeneratorState SeqGenerator
 
-
 data TargetedExp = TargetedExp {
   texp :: Exp,
   ttarget :: Int
@@ -42,7 +41,7 @@ s_alloc_label = do
 
 
 no_label :: Cmd -> CmdSeq
-no_label c = CmdSeq Nothing c
+no_label c = CmdSeq Nothing c Nothing
 m_nl = map no_label
 
 
@@ -114,7 +113,7 @@ assign_apply_labels (h:t) = do
     Nothing -> return (h:at)
     Just f -> do
       l <- s_alloc_label
-      return $ [CmdSeq (label h) $ f l, CmdSeq (Just $ Label l) Skip] ++ at
+      return $ [CmdSeq (label h) (f l) Nothing, CmdSeq (Just l) Skip Nothing] ++ at
 assign_apply_labels [] = return [] 
 
 sio :: IO a -> SeqGenerator a

@@ -54,12 +54,10 @@ data FunctionCall = FunctionCall {
   is_complex :: Bool
 } deriving (Eq,Ord,Show)
 
-data Label = Label Int | NamedLabel Int String
-  deriving (Eq,Ord,Show)
-
 data CmdSeq = CmdSeq {
-  label :: Maybe Label,
-  cmd :: Cmd
+  label :: Maybe Int,
+  cmd :: Cmd,
+  comment :: Maybe String
 } deriving (Eq, Ord, Show)
 
 data Cmds = Cmds [CmdSeq] (Map.Map Int FunctionCall) FunctionCall Int

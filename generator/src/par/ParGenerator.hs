@@ -94,7 +94,7 @@ generate_case :: CaseVariant -> NeedType -> Int -> Int -> Bool -> Bool
 generate_case (CaseVariant f e) nt ml el complex_follows strict_expected = do
   let fields_move = map (\(fid, target) -> no_label $ StoreField fid target) $ zip [0..] f in do
     (ce, se) <- generate_exp e nt complex_follows strict_expected
-    return ([CmdSeq (Just $ Label ml) Skip] ++ fields_move ++ ce ++ [no_label $ Jmp el], se)
+    return ([CmdSeq (Just ml) Skip Nothing] ++ fields_move ++ ce ++ [no_label $ Jmp el], se)
     
 
 --snd element of pair - info whether result expr is strict
@@ -149,7 +149,7 @@ generate_exp e nt complex_follows strict_expected = case e of
     (cf, sf) <- generate_exp f nt complex_follows strict_expected
     le <- alloc_label
     return $ (cc ++ [no_label $ JmpIfZero lf] ++ ct ++ [no_label $ Jmp le]
-       ++ [CmdSeq (Just $ Label lf) Skip] ++  cf ++ [CmdSeq (Just $ Label le) Skip], 
+       ++ [CmdSeq (Just lf) Skip Nothing] ++  cf ++ [CmdSeq (Just le) Skip Nothing], 
        st && sf)
   Ast.Case value cases -> do
     hc <- mapM (\x -> has_complex_call $ case_exp x) cases
@@ -159,7 +159,7 @@ generate_exp e nt complex_follows strict_expected = case e of
     ccases <- mapM (\(mc, ml) -> generate_case mc nt ml end_label complex_follows strict_expected)
       lcases 
     return (cval ++ [no_label $ JmpCase $ map snd lcases] ++ (concat $ map fst ccases) 
-      ++ [CmdSeq (Just $ Label end_label) Skip], and $ map snd ccases )
+      ++ [CmdSeq (Just end_label) Skip Nothing], and $ map snd ccases )
 
 generate_function :: Ast.FunctionSpec -> Ast.Function -> SeqGenerator ([CmdSeq], FunctionCall)
 generate_function spec (Ast.Function fid params locals exp) = do
@@ -167,7 +167,7 @@ generate_function spec (Ast.Function fid params locals exp) = do
   ce <- runStateT (generate_exp exp Return False True) $ FunctionGeneratorState locals
   ace <- assign_apply_labels $ fst $ fst ce
   f <- gets CmdGeneratorUtils.is_complex
-  return ((CmdSeq (Just $ NamedLabel flable $ Ast.fname spec) Skip:ace), 
+  return ((CmdSeq (Just flable) Skip (Just $ Ast.fname spec):ace) ++ [CmdSeq Nothing Skip $ Just $ "end of function " ++ Ast.fname spec], 
     FunctionCall fid flable params (next_local $ snd ce) (Ast.fname spec) $ f fid)
 
 generate_program :: Program -> SeqGenerator Cmds
@@ -176,8 +176,8 @@ generate_program prog = do
   let calls =  Map.fromList $ map (\(_, x) -> (Cmd.fid x, x)) cmds in do
     final_label <- s_alloc_label
     case Map.lookup 0 calls of
-      Just x -> return $ Cmds ((concat $ map fst cmds) ++ [CmdSeq (Just $ Label final_label) 
-        Finalize]) calls x final_label
+      Just x -> return $ Cmds ((concat $ map fst cmds) ++ [CmdSeq (Just final_label) 
+        Finalize Nothing]) calls x final_label
       Nothing -> sio $ ioError $ userError "Unknown function - should not happen" 
 
 generate :: Program -> IO Cmds

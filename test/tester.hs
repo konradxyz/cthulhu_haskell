@@ -37,10 +37,11 @@ test_exec exec input expected = do
     exitWith $ ExitFailure 1
   else
     return ()
+
 test_case :: String -> String -> String ->  IO()
 test_case compilation exec name = do
   putStrLn $ "Case " ++ name ++ ":"
-  runCmd $ "./cthulhu " ++  compilation ++ " " ++ cases_dir ++ "/" ++ name ++ ".ct"
+  runCmd $ "./cthulhu " ++  " " ++ cases_dir ++ "/" ++ name ++ ".ct " ++ compilation
   inputs <- readFile $ cases_dir ++ "/" ++ name ++ ".in"
   outputs <- readFile $ cases_dir ++ "/" ++ name ++ ".out"
   mapM_ (uncurry $ test_exec exec) $ zip (lines inputs) (lines outputs) 

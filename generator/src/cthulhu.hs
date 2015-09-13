@@ -2,6 +2,7 @@ module Main where
 
 
 import System.IO
+import System.Console.ArgParser
 import System.Directory
 import System.Exit
 import System.Environment ( getArgs, getProgName )
@@ -23,13 +24,7 @@ import CmdPrinter
 import ErrM
 import Utils
 
-
-compiler_file :: String
-compiler_file = "~/.cthulhu/dir"
-
-
 parser = pProgram
-
 
 parseFile :: String -> IO(Abscthulhu.Program)
 parseFile fname = do
@@ -67,70 +62,45 @@ runCmd cmd = do
       exitWith code
 
 
-run :: Options -> [String] -> IO ()
-run opts file = do
-  prog <- parseFiles ("cthulhu_lib/lib.ct":file)
+run :: Options -> IO ()
+run opts = do
+  prog <- parseFiles ["cthulhu_lib/lib.ct", file opts]
   t <- typecheck prog
   case t of
     Right x -> do
-      if par opts
-        then do
-          r <- ParGenerator.generate x
-          out_file <- openFile "runtimes/par/gen.h" WriteMode 
-          print_cmds True r out_file
-          hClose out_file
-          runCmd "cd runtimes/par; make"
-          runCmd "cp runtimes/par/run ."
-          if icpc opts
-            then runCmd "scripts/par_prepare_icpc.sh"
-            else return ()
-        else do
-          r <- SeqGenerator.generate x
-          out_file <- openFile "runtimes/seq/gen.h" WriteMode 
-          print_cmds False r out_file
-          hClose out_file
-          runCmd "cd runtimes/seq; make"
-          runCmd "cp runtimes/seq/run ."
-          if icpc opts
-            then runCmd "scripts/prepare_icpc.sh"
-            else return ()
+      (runtime, generator) <- if par opts then 
+          return ("par", ParGenerator.generate)
+        else 
+          return ("seq", SeqGenerator.generate)
+      r <- generator x
+      out_file <- openFile ("runtimes/" ++ runtime ++ "/gen.h") WriteMode 
+      print_cmds (par opts) r out_file
+      hClose out_file
+      runCmd $ "cd runtimes/" ++ runtime ++ "; make"
+      runCmd $ "cp runtimes/" ++ runtime ++ "/run ."
+      if icpc opts
+        then runCmd $ "scripts/" ++ runtime ++ "_prepare_icpc.sh"
+        else return ()
+      if casm opts
+        then runCmd $ "cp runtimes/" ++ runtime ++ "/gen.h run.casm"
+        else return ()
     Left err -> do
       putStrLn "Typecheck failed:"
       putStrLn err
 
 data Options = Options {
+  file :: String,
   icpc :: Bool,
   par :: Bool,
-  compiler_path :: String
+  casm :: Bool
 } deriving (Show)
 
-
-separate :: [String] -> ([String], [String])
-separate [] = ([], [])
-separate (h:t) = let (par, opts) = separate t in
-  if starts_with "--" h
-    then (par, (drop 2 h:opts))
-    else ((h:par), opts)
-
-options :: [String] -> IO Options
-options opts = 
-  let (r1, icpc) = check_remove "icpc" opts in
-    let (r, par) = check_remove "par" r1 in
-      case r of
-        [] -> do
-          config_dir <- getAppUserDataDirectory "cthulhu"
-          path <- readFile $ config_dir ++ "/dir"
-          return $ Options icpc par path
-        (h:_) -> do
-          putStrLn $ "Unknown option " ++ h
-          exitFailure
+options_parser :: ParserSpec Options
+options_parser = Options 
+  `parsedBy` reqPos "file"
+  `andBy` (boolFlag "icpc")
+  `andBy` (boolFlag "par")
+  `andBy` (boolFlag "casm")
 
 main :: IO ()
-main = do 
-  arg <- getArgs
-  let (args, opts) = separate arg in do
-    opts <- options opts
-    print opts
-    case args of
-      [] -> putStrLn "Filename expected"
-      fs -> run opts fs
+main = withParseResult options_parser run
