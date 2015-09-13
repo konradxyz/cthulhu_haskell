@@ -64,35 +64,40 @@ runCmd cmd = do
 
 run :: Options -> IO ()
 run opts = do
-  prog <- parseFiles ["cthulhu_lib/lib.ct", file opts]
-  t <- typecheck prog
-  case t of
-    Right x -> do
-      (runtime, generator) <- if par opts then 
-          return ("par", ParGenerator.generate)
-        else 
-          return ("seq", SeqGenerator.generate)
-      r <- generator x
-      out_file <- openFile ("runtimes/" ++ runtime ++ "/gen.h") WriteMode 
-      print_cmds (par opts) r out_file
-      hClose out_file
-      runCmd $ "cd runtimes/" ++ runtime ++ "; make"
-      runCmd $ "cp runtimes/" ++ runtime ++ "/run ."
-      if icpc opts
-        then runCmd $ "scripts/" ++ runtime ++ "_prepare_icpc.sh"
-        else return ()
-      if casm opts
-        then runCmd $ "cp runtimes/" ++ runtime ++ "/gen.h run.casm"
-        else return ()
-    Left err -> do
-      putStrLn "Typecheck failed:"
-      putStrLn err
-
+  (runtime, generator) <- if par opts then
+      return ("par", ParGenerator.generate)
+    else
+      return ("seq", SeqGenerator.generate)
+  if icasm opts then do
+    runCmd $ "cp " ++ file opts ++ " runtimes/" ++ runtime ++ "/gen.h"
+  else do
+    prog <- parseFiles ["cthulhu_lib/lib.ct", file opts]
+    t <- typecheck prog
+    case t of
+      Right x -> do
+        r <- generator x
+        out_file <- openFile ("runtimes/" ++ runtime ++ "/gen.h") WriteMode 
+        print_cmds (par opts) r out_file
+        hClose out_file
+      Left err -> do
+        putStrLn "Typecheck failed:"
+        putStrLn err
+        exitWith $ ExitFailure 1
+  runCmd $ "cd runtimes/" ++ runtime ++ "; make"
+  runCmd $ "cp runtimes/" ++ runtime ++ "/run ."
+  if icpc opts
+    then runCmd $ "scripts/" ++ runtime ++ "_prepare_icpc.sh"
+    else return ()
+  if casm opts
+    then runCmd $ "cp runtimes/" ++ runtime ++ "/gen.h run.casm"
+    else return ()
+ 
 data Options = Options {
   file :: String,
   icpc :: Bool,
   par :: Bool,
-  casm :: Bool
+  casm :: Bool,
+  icasm :: Bool
 } deriving (Show)
 
 options_parser :: ParserSpec Options
@@ -101,6 +106,7 @@ options_parser = Options
   `andBy` (boolFlag "icpc")
   `andBy` (boolFlag "par")
   `andBy` (boolFlag "casm")
+  `andBy` (boolFlag "icasm")
 
 main :: IO ()
 main = withParseResult options_parser run

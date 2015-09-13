@@ -30,3 +30,7 @@ runtime/runtime
 *.swp
 *.hi
 *.casm
+runtimes/*/gen.h
+cthulhu
+tester
+run
