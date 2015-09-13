@@ -2,6 +2,7 @@ module Main where
 
 
 import System.IO
+import System.Directory
 import System.Exit
 import System.Environment ( getArgs, getProgName )
 import System.Process
@@ -21,6 +22,11 @@ import ParGenerator
 import CmdPrinter
 import ErrM
 import Utils
+
+
+compiler_file :: String
+compiler_file = "~/.cthulhu/dir"
+
 
 parser = pProgram
 
@@ -94,7 +100,8 @@ run opts file = do
 
 data Options = Options {
   icpc :: Bool,
-  par :: Bool
+  par :: Bool,
+  compiler_path :: String
 } deriving (Show)
 
 
@@ -110,7 +117,10 @@ options opts =
   let (r1, icpc) = check_remove "icpc" opts in
     let (r, par) = check_remove "par" r1 in
       case r of
-        [] -> return $ Options icpc par
+        [] -> do
+          config_dir <- getAppUserDataDirectory "cthulhu"
+          path <- readFile $ config_dir ++ "/dir"
+          return $ Options icpc par path
         (h:_) -> do
           putStrLn $ "Unknown option " ++ h
           exitFailure
@@ -124,8 +134,3 @@ main = do
     case args of
       [] -> putStrLn "Filename expected"
       fs -> run opts fs
-
-
-
-
-

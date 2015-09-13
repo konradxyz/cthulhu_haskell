@@ -1,0 +1,2 @@
+call :: int -> int:
+call n = n ;
