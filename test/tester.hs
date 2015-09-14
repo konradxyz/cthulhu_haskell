@@ -38,17 +38,30 @@ test_exec exec input expected = do
   else
     return ()
 
-test_case :: String -> String -> String ->  IO()
+test_case :: (String -> String) -> String -> String -> IO()
 test_case compilation exec name = do
   putStrLn $ "Case " ++ name ++ ":"
-  runCmd $ "./cthulhu " ++  " " ++ cases_dir ++ "/" ++ name ++ ".ct " ++ compilation
-  inputs <- readFile $ cases_dir ++ "/" ++ name ++ ".in"
-  outputs <- readFile $ cases_dir ++ "/" ++ name ++ ".out"
-  mapM_ (uncurry $ test_exec exec) $ zip (lines inputs) (lines outputs) 
+  runCmd $ compilation name
+  let case_name = takeWhile (/= '.') name in do
+    inputs <- readFile $ cases_dir ++ "/" ++ case_name ++ ".in"
+    outputs <- readFile $ cases_dir ++ "/" ++ case_name ++ ".out"
+    mapM_ (uncurry $ test_exec exec) $ zip (lines inputs) (lines outputs) 
+    runCmd "rm run"
+    return ()
+
+compilation :: String -> String -> String -> String
+compilation ext opts name = "./cthulhu " ++  " " ++ cases_dir ++ "/" ++ name ++ "." ++ ext ++ " " ++ opts
+
+files_with_ext :: String -> String -> IO [String]
+files_with_ext directory extension = do
+  files <- getDirectoryContents directory
+  return $ map (\x -> take (length x - length  ("." ++ extension)) x) $ filter (endswith  ("." ++ extension)) files
+  
 
 main = do
-  files <- getDirectoryContents(cases_dir)
-  let cases = map (\x -> take (length x - length ".ct") x) $ filter (endswith ".ct") files in do
-    mapM (test_case "" "") $ cases
-    mapM (test_case "--par" "4") $ cases
+  cases <- files_with_ext cases_dir "ct"
+  mapM (test_case (compilation "ct" "") "") $ cases
+  mapM (test_case (compilation "ct" "--par") "4") $ cases
+  cases <- files_with_ext cases_dir "par.casm"
+  mapM (test_case (compilation "par.casm" "--par --icasm") "4") $ cases
   putStrLn "All checks succeeded"
