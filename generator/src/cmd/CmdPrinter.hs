@@ -85,7 +85,9 @@ print_cmd _ Ret = return "RET"
 print_cmd _ Skip = return "SKIP" 
 print_cmd _ (StoreField from to) = return $ "STORE_FIELD(" ++ show from ++ "," ++ show to ++ ")"
 print_cmd _ Finalize = return "FINALIZE" 
-
+print_cmd f (CallTail id) = do
+  f <- get_function f id
+  return $ "CALL_TAIL(" ++ show (flabel f) ++ ")"
 print_label :: Handle -> Int -> IO()
 print_label h l = hPutStrLn h $ "case " ++  show l ++ ":"
 

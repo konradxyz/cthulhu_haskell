@@ -69,8 +69,8 @@ ffail msg = do
 
 generate_config :: Options -> IO Config.Config
 generate_config opts = let res = Config.Config (par opts) (tco opts) in do
-  if Config.tco res then
-    ffail "TCO not yet supported"
+  if Config.tco res && not (Config.par res) then
+    ffail "TCO not yet supported in seq"
   else
     return ()
   return res

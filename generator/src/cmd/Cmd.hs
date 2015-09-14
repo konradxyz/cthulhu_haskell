@@ -31,6 +31,7 @@ data Cmd =
     | Construct Int
     | Store Int
     | Call Int
+    | CallTail Int
     | CallFork Int
     | CallWithLabel Int Int
     | CallForkWithLabel Int Int

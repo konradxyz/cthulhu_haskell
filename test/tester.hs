@@ -66,6 +66,7 @@ main = do
   cases <- files_with_ext "ct"
   mapM (test_case (compilation "ct" "") "") $ cases
   mapM (test_case (compilation "ct" "--par") "4") $ cases
+  mapM (test_case (compilation "ct" "--tco --par") "4") $ cases
   cases <- files_with_ext "par.casm"
   mapM (test_case (compilation "par.casm" "--par --icasm") "4") $ cases
   putStrLn "All checks succeeded"

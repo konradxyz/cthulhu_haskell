@@ -134,7 +134,14 @@ generate_exp e nt complex_follows strict_expected = case e of
         cmds <- handle_params exps (AllocFunctionEnv id) (Cmd.CallFork id) nt True
         return (cmds, False)
       else do
-        cmds <- handle_params exps (AllocFunctionEnv id) (Cmd.Call id) nt 
+        is_tco <- asks tco
+        finalize_command <- if is_tco then
+            case nt of
+              Return -> return Cmd.CallTail
+              _ -> return Cmd.Call
+          else
+            return Cmd.Call
+        cmds <- handle_params exps (AllocFunctionEnv id) (finalize_command id) nt 
           (complex_follows || id_complex)
         return (cmds, True)
   Ast.Let id val ret -> do
