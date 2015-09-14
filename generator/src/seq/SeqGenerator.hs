@@ -3,12 +3,15 @@ module SeqGenerator where
 
 import Ast
 import Cmd
+import Config
+
+import Control.Monad.Trans.Reader
 import qualified Data.Map as Map
 import Control.Monad.State
 import CmdGeneratorUtils
 import System.IO
 
-handle_int :: Exp -> NeedType -> FunctionGenerator [CmdSeq]
+handle_int :: Exp -> NeedType -> FunctionGeneratorWithConfig [CmdSeq]
 handle_int e nt = do
     (bin, other, _) <- gather_binary e 
     res <- mapM (\te -> generate_exp (texp te) (ToEnv $ ttarget te)) other
@@ -16,7 +19,7 @@ handle_int e nt = do
     return $ concat res ++ [no_label $ Arith bin] ++ need
 
 
-handle_params :: [Exp] -> Cmd -> Cmd -> NeedType -> FunctionGenerator [CmdSeq]
+handle_params :: [Exp] -> Cmd -> Cmd -> NeedType -> FunctionGeneratorWithConfig [CmdSeq]
 handle_params exps prep finalize nt = do
     params <- mapM (\e -> alloc_local >>= \id -> return $ TargetedExp e id) exps
     res <- mapM (\te -> generate_exp (texp te) (ToEnv $ ttarget te)) params
@@ -25,14 +28,14 @@ handle_params exps prep finalize nt = do
         return $ concat res ++ 
           ([no_label prep] ++ params_move ++ [no_label finalize]) ++ fin
 
-generate_case :: CaseVariant -> NeedType -> Int -> Int -> FunctionGenerator [CmdSeq]
+generate_case :: CaseVariant -> NeedType -> Int -> Int -> FunctionGeneratorWithConfig [CmdSeq]
 generate_case (CaseVariant f e) nt ml el = do
   let fields_move = map (\(fid, target) -> no_label $ StoreField fid target) $ zip [0..] f in do
     ce <- generate_exp e nt
     return $ [CmdSeq (Just ml) Skip Nothing] ++ fields_move ++ ce ++ [no_label $ Jmp el]
     
 
-generate_exp :: Exp -> NeedType -> FunctionGenerator [CmdSeq]
+generate_exp :: Exp -> NeedType -> FunctionGeneratorWithConfig [CmdSeq]
 generate_exp e nt = case e of
   Ast.Construct id exps -> handle_params exps (AllocParams $ length exps) (Cmd.Construct id) nt
   Operator _ _ _ -> handle_int e nt
@@ -70,17 +73,17 @@ generate_exp e nt = case e of
     
 
 
-generate_function :: Ast.FunctionSpec -> Ast.Function -> SeqGenerator ([CmdSeq], FunctionCall)
-generate_function spec (Ast.Function fid params locals exp) = do
+generate_function :: Config -> Ast.FunctionSpec -> Ast.Function -> SeqGenerator ([CmdSeq], FunctionCall)
+generate_function c spec (Ast.Function fid params locals exp) = do
   flable <- s_alloc_label
-  ce <- runStateT (generate_exp exp Return) $ FunctionGeneratorState locals
+  ce <- runStateT (runReaderT (generate_exp exp Return) c) $ FunctionGeneratorState locals
   ace <- assign_apply_labels $ fst ce
   return ((CmdSeq (Just flable) Skip (Just $ "function " ++ Ast.fname spec) :ace), 
     FunctionCall fid flable params (next_local $ snd ce) (Ast.fname spec) False)
 
-generate_program :: Program -> SeqGenerator Cmds
-generate_program prog = do
-  cmds <- mapM (\(k, v) -> generate_function k v) $ Map.toList $ Ast.functions prog
+generate_program :: Config -> Program -> SeqGenerator Cmds
+generate_program c prog = do
+  cmds <- mapM (\(k, v) -> generate_function c k v) $ Map.toList $ Ast.functions prog
   let calls =  Map.fromList $ map (\(_, x) -> (Cmd.fid x, x)) cmds in do
     final_label <- s_alloc_label
     case Map.lookup 0 calls of
@@ -88,9 +91,9 @@ generate_program prog = do
         Finalize Nothing]) calls x final_label
       Nothing -> sio $ ioError $ userError "Unknown function - should not happen" 
 
-generate :: Program -> IO Cmds
-generate p = do
-  evalStateT (generate_program p) (SeqGeneratorState 0 (\x-> False))
+generate :: Config -> Program -> IO Cmds
+generate c p = do
+  evalStateT (generate_program c p) (SeqGeneratorState 0 (\x-> False))
 
 
 

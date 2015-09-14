@@ -16,6 +16,7 @@ import Printcthulhu
 import Abscthulhu
 
 import Ast
+import qualified Config
 import Typechecker
 import Template
 import SeqGenerator
@@ -61,10 +62,13 @@ runCmd cmd = do
       putStrLn serr
       exitWith code
 
+generate_config :: Options -> IO Config.Config
+generate_config opts = return $ Config.Config (par opts) (tco opts)
 
 run :: Options -> IO ()
 run opts = do
-  (runtime, generator) <- if par opts then
+  conf <- generate_config opts
+  (runtime, generator) <- if par opts then do
       return ("par", ParGenerator.generate)
     else
       return ("seq", SeqGenerator.generate)
@@ -75,7 +79,7 @@ run opts = do
     t <- typecheck prog
     case t of
       Right x -> do
-        r <- generator x
+        r <- generator conf x
         out_file <- openFile ("runtimes/" ++ runtime ++ "/gen.h") WriteMode 
         print_cmds (par opts) r out_file
         hClose out_file
@@ -97,7 +101,8 @@ data Options = Options {
   icpc :: Bool,
   par :: Bool,
   casm :: Bool,
-  icasm :: Bool
+  icasm :: Bool,
+  tco :: Bool
 } deriving (Show)
 
 options_parser :: ParserSpec Options
@@ -107,6 +112,7 @@ options_parser = Options
   `andBy` (boolFlag "par")
   `andBy` (boolFlag "casm")
   `andBy` (boolFlag "icasm")
+  `andBy` (boolFlag "tco")
 
 main :: IO ()
 main = withParseResult options_parser run

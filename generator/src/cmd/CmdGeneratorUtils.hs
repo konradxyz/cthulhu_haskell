@@ -2,7 +2,9 @@ module CmdGeneratorUtils where
 
 import Ast
 import Cmd
+import Config
 import Control.Monad.State
+import Control.Monad.Trans.Reader
 
 data SeqGeneratorState = SeqGeneratorState {
   next_label :: Int,
@@ -21,12 +23,14 @@ data FunctionGeneratorState = FunctionGeneratorState {
 
 type FunctionGenerator = StateT FunctionGeneratorState SeqGenerator
 
+type FunctionGeneratorWithConfig a = ReaderT Config FunctionGenerator a
+
 data TargetedExp = TargetedExp {
   texp :: Exp,
   ttarget :: Int
 }
 
-alloc_local :: FunctionGenerator Int
+alloc_local :: FunctionGeneratorWithConfig Int
 alloc_local = do
   ret <- gets next_local
   state <- get
@@ -46,8 +50,8 @@ m_nl = map no_label
 
 
 
-alloc_label :: FunctionGenerator Int
-alloc_label = lift s_alloc_label
+alloc_label :: FunctionGeneratorWithConfig Int
+alloc_label = lift $ lift s_alloc_label
 
 op_ast_to_cmd :: Ast.OpType -> Cmd.OpType
 op_ast_to_cmd Ast.Add = Cmd.Add
@@ -69,13 +73,13 @@ op_ast_to_cmd Ast.Mul = Cmd.Mul
 data NeedType =
   ToEnv Int | Return | Acc | ArithNeed
 
-arith_need :: NeedType -> FunctionGenerator [CmdSeq]
+arith_need :: NeedType -> FunctionGeneratorWithConfig [CmdSeq]
 arith_need (ToEnv id) = return $ m_nl [StoreArith id]
 arith_need Acc = return $ m_nl [LoadArith]
 arith_need Return = return $ m_nl [LoadArith, Ret]
 arith_need ArithNeed = return $ m_nl []
 
-acc_need :: NeedType -> FunctionGenerator [CmdSeq]
+acc_need :: NeedType -> FunctionGeneratorWithConfig [CmdSeq]
 acc_need (ToEnv id) = return $ m_nl [Store id]
 acc_need Acc = return []
 acc_need Return = return $ m_nl [Ret]
@@ -85,7 +89,7 @@ acc_need ArithNeed = return $ m_nl [ArithLoadAcc]
 
 
 
-gather_binary :: Exp -> FunctionGenerator (ArithOp, [TargetedExp], [Int])
+gather_binary :: Exp -> FunctionGeneratorWithConfig (ArithOp, [TargetedExp], [Int])
 gather_binary e = case e of
   Operator op l r -> do
     (la, lt, ll) <- gather_binary l

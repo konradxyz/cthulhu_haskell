@@ -5,7 +5,9 @@ import qualified Data.Map as Map
 import Data.List
 import CmdGeneratorUtils
 import Cmd
+import Config
 import Control.Monad.State
+import Control.Monad.Trans.Reader
 
 functions_map :: Program -> Map.Map Int Function
 functions_map prog = 
@@ -51,18 +53,18 @@ has_complex f (Ast.Case c o) = has_complex f c || (or $ map ((has_complex f).cas
 has_complex _ _ = False
 
 
-has_complex_call :: Exp -> FunctionGenerator Bool
+has_complex_call :: Exp -> FunctionGeneratorWithConfig Bool
 has_complex_call e = do
-  f <- lift $ gets CmdGeneratorUtils.is_complex
+  f <- lift $ lift $  gets CmdGeneratorUtils.is_complex
   return $ has_complex f e
 
-is_complex_call :: Int -> FunctionGenerator Bool
+is_complex_call :: Int -> FunctionGeneratorWithConfig Bool
 is_complex_call id = do
-  f <- lift $ gets CmdGeneratorUtils.is_complex
+  f <- lift $ lift $ gets CmdGeneratorUtils.is_complex
   return $ f id
 
 
-handle_int :: Exp -> NeedType -> Bool -> FunctionGenerator ([CmdSeq], Bool)
+handle_int :: Exp -> NeedType -> Bool -> FunctionGeneratorWithConfig ([CmdSeq], Bool)
 handle_int e nt has_complex = do
     (bin, other, locs) <- gather_binary e 
     (cmds, stricts) <- prepare_parameters other ToEnv has_complex
@@ -72,7 +74,7 @@ handle_int e nt has_complex = do
       return (cmds ++ map no_label (non_strict ++ wait_locals ++ [Arith bin]) ++ need, True)
 
 prepare_parameters :: [TargetedExp] -> (Int -> NeedType) -> Bool 
-  -> FunctionGenerator ([CmdSeq], [Bool])
+  -> FunctionGeneratorWithConfig ([CmdSeq], [Bool])
 prepare_parameters [] _ _ = return ([], [])
 prepare_parameters (h:t) nt complex_follows = do
   (cmds, stricts) <- prepare_parameters t nt complex_follows
@@ -80,7 +82,7 @@ prepare_parameters (h:t) nt complex_follows = do
   (cms, strict) <- generate_exp (texp h) (nt $ ttarget h) (complex_follows || or hc) False
   return $ (cms ++ cmds, (strict:stricts))
 
-handle_params :: [Exp] -> Cmd -> Cmd -> NeedType -> Bool -> FunctionGenerator [CmdSeq]
+handle_params :: [Exp] -> Cmd -> Cmd -> NeedType -> Bool -> FunctionGeneratorWithConfig [CmdSeq]
 handle_params exps prep finalize nt complex_follows = do
     tparams <- mapM (\x -> alloc_local >>= \id -> return $ TargetedExp x id) exps
     cmds <- prepare_parameters tparams ToEnv complex_follows
@@ -89,16 +91,16 @@ handle_params exps prep finalize nt complex_follows = do
         return $ fst cmds ++ ([no_label prep] ++ pm ++ [no_label finalize]) ++ fin
 
 
+
 generate_case :: CaseVariant -> NeedType -> Int -> Int -> Bool -> Bool 
-  -> FunctionGenerator ([CmdSeq], Bool)
+  -> FunctionGeneratorWithConfig ([CmdSeq], Bool)
 generate_case (CaseVariant f e) nt ml el complex_follows strict_expected = do
   let fields_move = map (\(fid, target) -> no_label $ StoreField fid target) $ zip [0..] f in do
     (ce, se) <- generate_exp e nt complex_follows strict_expected
     return ([CmdSeq (Just ml) Skip Nothing] ++ fields_move ++ ce ++ [no_label $ Jmp el], se)
-    
 
---snd element of pair - info whether result expr is strict
-generate_exp :: Exp -> NeedType -> Bool -> Bool ->  FunctionGenerator ([CmdSeq], Bool)
+
+generate_exp :: Exp -> NeedType -> Bool -> Bool ->  FunctionGeneratorWithConfig ([CmdSeq], Bool)
 generate_exp e nt complex_follows strict_expected = case e of
   Ast.Construct id exps -> do
     c <- handle_params exps (AllocParams $ length exps) (Cmd.Construct id) nt complex_follows
@@ -161,18 +163,18 @@ generate_exp e nt complex_follows strict_expected = case e of
     return (cval ++ [no_label $ JmpCase $ map snd lcases] ++ (concat $ map fst ccases) 
       ++ [CmdSeq (Just end_label) Skip Nothing], and $ map snd ccases )
 
-generate_function :: Ast.FunctionSpec -> Ast.Function -> SeqGenerator ([CmdSeq], FunctionCall)
-generate_function spec (Ast.Function fid params locals exp) = do
+generate_function :: Config -> Ast.FunctionSpec -> Ast.Function -> SeqGenerator ([CmdSeq], FunctionCall)
+generate_function conf spec (Ast.Function fid params locals exp) = do
   flable <- s_alloc_label
-  ce <- runStateT (generate_exp exp Return False True) $ FunctionGeneratorState locals
+  ce <- runStateT (runReaderT (generate_exp exp Return False True) conf) $ FunctionGeneratorState locals
   ace <- assign_apply_labels $ fst $ fst ce
   f <- gets CmdGeneratorUtils.is_complex
   return ((CmdSeq (Just flable) Skip (Just $ Ast.fname spec):ace) ++ [CmdSeq Nothing Skip $ Just $ "end of function " ++ Ast.fname spec], 
     FunctionCall fid flable params (next_local $ snd ce) (Ast.fname spec) $ f fid)
 
-generate_program :: Program -> SeqGenerator Cmds
-generate_program prog = do
-  cmds <- mapM (\(k, v) -> generate_function k v) $ Map.toList $ Ast.functions prog
+generate_program :: Config -> Program -> SeqGenerator Cmds
+generate_program c prog = do
+  cmds <- mapM (\(k, v) -> generate_function c k v) $ Map.toList $ Ast.functions prog
   let calls =  Map.fromList $ map (\(_, x) -> (Cmd.fid x, x)) cmds in do
     final_label <- s_alloc_label
     case Map.lookup 0 calls of
@@ -180,8 +182,8 @@ generate_program prog = do
         Finalize Nothing]) calls x final_label
       Nothing -> sio $ ioError $ userError "Unknown function - should not happen" 
 
-generate :: Program -> IO Cmds
-generate p = let f = \k -> Map.findWithDefault False k $ complex_functions p in 
-  evalStateT (generate_program p) (SeqGeneratorState 0 f)
+generate :: Config -> Program -> IO Cmds
+generate c p = let f = \k -> Map.findWithDefault False k $ complex_functions p in 
+  evalStateT (generate_program c p) (SeqGeneratorState 0 f)
 
 
