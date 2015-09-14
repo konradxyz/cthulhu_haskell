@@ -1,6 +1,7 @@
 import System.IO
 import System.Directory
 import Data.String.Utils
+import System.Environment
 import System.Process
 
 import System.Exit
@@ -52,16 +53,19 @@ test_case compilation exec name = do
 compilation :: String -> String -> String -> String
 compilation ext opts name = "./cthulhu " ++  " " ++ cases_dir ++ "/" ++ name ++ "." ++ ext ++ " " ++ opts
 
-files_with_ext :: String -> String -> IO [String]
-files_with_ext directory extension = do
-  files <- getDirectoryContents directory
+files_with_ext :: String -> IO [String]
+files_with_ext extension = do
+  args <- getArgs
+  files <- case args of
+    [] -> getDirectoryContents cases_dir
+    _ -> return args
   return $ map (\x -> take (length x - length  ("." ++ extension)) x) $ filter (endswith  ("." ++ extension)) files
   
 
 main = do
-  cases <- files_with_ext cases_dir "ct"
+  cases <- files_with_ext "ct"
   mapM (test_case (compilation "ct" "") "") $ cases
   mapM (test_case (compilation "ct" "--par") "4") $ cases
-  cases <- files_with_ext cases_dir "par.casm"
+  cases <- files_with_ext "par.casm"
   mapM (test_case (compilation "par.casm" "--par --icasm") "4") $ cases
   putStrLn "All checks succeeded"

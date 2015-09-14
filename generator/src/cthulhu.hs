@@ -62,8 +62,18 @@ runCmd cmd = do
       putStrLn serr
       exitWith code
 
+ffail :: String -> IO()
+ffail msg = do
+  putStrLn msg
+  exitWith $ ExitFailure 1
+
 generate_config :: Options -> IO Config.Config
-generate_config opts = return $ Config.Config (par opts) (tco opts)
+generate_config opts = let res = Config.Config (par opts) (tco opts) in do
+  if Config.tco res then
+    ffail "TCO not yet supported"
+  else
+    return ()
+  return res
 
 run :: Options -> IO ()
 run opts = do

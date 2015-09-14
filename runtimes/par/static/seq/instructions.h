@@ -71,6 +71,12 @@
 	break;\
 }
 
+#define CALL_TAIL(label) {\
+	context->nextInstruction = label;\
+	context->currentFrame->environment = std::move(context->params);\
+	break;\
+}
+
 #define FORK(label, params, is_complex, retLabel) {\
 	if (context->getTaskQueue()->isFull() || !(is_complex)) {\
 		context->currentFrame->nextInstruction = retLabel;\
