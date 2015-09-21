@@ -68,7 +68,7 @@ ffail msg = do
   exitWith $ ExitFailure 1
 
 generate_config :: Options -> IO Config.Config
-generate_config opts = let res = Config.Config (par opts) (tco opts) in do
+generate_config opts = let res = Config.Config (par opts) (tco opts) (move_opt opts) in do
   if Config.tco res && not (Config.par res) then
     ffail "TCO not yet supported in seq"
   else
@@ -112,7 +112,8 @@ data Options = Options {
   par :: Bool,
   casm :: Bool,
   icasm :: Bool,
-  tco :: Bool
+  tco :: Bool,
+  move_opt :: Bool
 } deriving (Show)
 
 options_parser :: ParserSpec Options
@@ -123,6 +124,7 @@ options_parser = Options
   `andBy` (boolFlag "casm")
   `andBy` (boolFlag "icasm")
   `andBy` (boolFlag "tco")
+  `andBy` (boolFlag "move-opt")
 
 main :: IO ()
 main = withParseResult options_parser run
