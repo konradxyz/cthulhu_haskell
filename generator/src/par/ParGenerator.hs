@@ -2,6 +2,7 @@ module ParGenerator where
 
 import Ast
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import Data.List
 import CmdGeneratorUtils
 import Cmd
@@ -63,6 +64,14 @@ is_complex_call id = do
   f <- lift $ lift $ gets CmdGeneratorUtils.is_complex
   return $ f id
 
+-- some data that describes what happens after execution of current exp
+
+-- some data that describes what should be done with this expression result
+data Requirements = Requirements {
+  need_type :: NeedType,
+  complex_follows :: Bool,
+  strict_expected :: Bool
+}
 
 handle_int :: Exp -> NeedType -> Bool -> FunctionGeneratorWithConfig ([CmdSeq], Bool)
 handle_int e nt has_complex = do
@@ -79,7 +88,7 @@ prepare_parameters [] _ _ = return ([], [])
 prepare_parameters (h:t) nt complex_follows = do
   (cmds, stricts) <- prepare_parameters t nt complex_follows
   hc <- mapM (has_complex_call.texp) t
-  (cms, strict) <- generate_exp (texp h) (nt $ ttarget h) (complex_follows || or hc) False
+  (cms, strict) <- generate_exp (texp h) $ Requirements (nt $ ttarget h) (complex_follows || or hc) False
   return $ (cms ++ cmds, (strict:stricts))
 
 handle_params :: [Exp] -> Cmd -> Cmd -> NeedType -> Bool -> FunctionGeneratorWithConfig [CmdSeq]
@@ -92,80 +101,79 @@ handle_params exps prep finalize nt complex_follows = do
 
 
 
-generate_case :: CaseVariant -> NeedType -> Int -> Int -> Bool -> Bool 
-  -> FunctionGeneratorWithConfig ([CmdSeq], Bool)
-generate_case (CaseVariant f e) nt ml el complex_follows strict_expected = do
+generate_case :: CaseVariant -> Int -> Int -> Requirements -> FunctionGeneratorWithConfig ([CmdSeq], Bool)
+generate_case (CaseVariant f e) ml el req = do
   let fields_move = map (\(fid, target) -> no_label $ StoreField fid target) $ zip [0..] f in do
-    (ce, se) <- generate_exp e nt complex_follows strict_expected
+    (ce, se) <- generate_exp e req
     return ([CmdSeq (Just ml) Skip Nothing] ++ fields_move ++ ce ++ [no_label $ Jmp el], se)
 
 
-generate_exp :: Exp -> NeedType -> Bool -> Bool ->  FunctionGeneratorWithConfig ([CmdSeq], Bool)
-generate_exp e nt complex_follows strict_expected = case e of
+generate_exp :: Exp -> Requirements ->  FunctionGeneratorWithConfig ([CmdSeq], Bool)
+generate_exp e req = case e of
   Ast.Construct id exps -> do
-    c <- handle_params exps (AllocParams $ length exps) (Cmd.Construct id) nt complex_follows
+    c <- handle_params exps (AllocParams $ length exps) (Cmd.Construct id) (need_type req) (complex_follows req)
     return (c, True)
-  Ast.Operator _ _ _ -> handle_int e nt complex_follows
+  Ast.Operator _ _ _ -> handle_int e (need_type req) (complex_follows req)
   Ast.Apply f p -> do
     id <- alloc_local
     nc <- has_complex_call f
-    (pe, _) <- generate_exp p (ToEnv id) (nc || complex_follows) False
-    (fe, _) <- generate_exp f Acc True True
-    fin <- acc_need nt
-    if not strict_expected && complex_follows
+    (pe, _) <- generate_exp p $ Requirements (ToEnv id) (nc || complex_follows req) False
+    (fe, _) <- generate_exp f $ Requirements Acc True True
+    fin <- acc_need $ need_type req
+    if not (strict_expected req) && complex_follows req
       then
         return $ (pe ++ fe ++ [no_label $ AddParamMoveParFork id] ++ fin, False)
       else
         return $ (pe ++ fe ++ [no_label $ AddParamMove id] ++ fin, True)
-  Ast.Const _ -> handle_int e nt complex_follows 
+  Ast.Const _ -> handle_int e (need_type req) $  complex_follows req
   Ast.Local id -> do
-    fin <- acc_need nt
-    if strict_expected then
+    fin <- acc_need $ need_type req
+    if strict_expected req then
         return $ ([no_label $ Wait id, no_label $ Load id] ++ fin, True)
     else
         return $ ([no_label $ Load id] ++ fin, False)
   Ast.Global id p exps -> do
-    cmds <- handle_params exps (AllocParams $ length exps) (Cmd.GlobalPar id) nt complex_follows
+    cmds <- handle_params exps (AllocParams $ length exps) (Cmd.GlobalPar id) (need_type req) $  complex_follows req
     return (cmds, True)
   Ast.Call id exps -> do
     id_complex  <- is_complex_call id
-    if not strict_expected && complex_follows && id_complex
+    if not (strict_expected req) && (complex_follows req) && id_complex
       then do
-        cmds <- handle_params exps (AllocFunctionEnv id) (Cmd.CallFork id) nt True
+        cmds <- handle_params exps (AllocFunctionEnv id) (Cmd.CallFork id) (need_type req) True
         return (cmds, False)
       else do
         is_tco <- asks tco
         finalize_command <- if is_tco then
-            case nt of
+            case need_type req of
               Return -> return Cmd.CallTail
               _ -> return Cmd.Call
           else
             return Cmd.Call
-        cmds <- handle_params exps (AllocFunctionEnv id) (finalize_command id) nt 
-          (complex_follows || id_complex)
+        cmds <- handle_params exps (AllocFunctionEnv id) (finalize_command id)  (need_type req)
+          (complex_follows req || id_complex)
         return (cmds, True)
   Ast.Let id val ret -> do
     hc <- has_complex_call ret 
-    (cval, _) <- generate_exp val (ToEnv id) (hc || complex_follows) False
-    (cret, s) <- generate_exp ret nt complex_follows strict_expected
+    (cval, _) <- generate_exp val $ Requirements (ToEnv id) (hc || complex_follows req) False
+    (cret, s) <- generate_exp ret req
     return $ (cval ++ cret, s)
   Ast.If c t f -> do
     thc <- has_complex_call t
     fhc <- has_complex_call f
-    (cc, _) <- generate_exp c ArithNeed (complex_follows || thc || fhc) True
-    (ct, st) <- generate_exp t nt complex_follows strict_expected
+    (cc, _) <- generate_exp c $ Requirements ArithNeed (complex_follows req || thc || fhc) True
+    (ct, st) <- generate_exp t req
     lf <- alloc_label
-    (cf, sf) <- generate_exp f nt complex_follows strict_expected
+    (cf, sf) <- generate_exp f req
     le <- alloc_label
     return $ (cc ++ [no_label $ JmpIfZero lf] ++ ct ++ [no_label $ Jmp le]
        ++ [CmdSeq (Just lf) Skip Nothing] ++  cf ++ [CmdSeq (Just le) Skip Nothing], 
        st && sf)
   Ast.Case value cases -> do
     hc <- mapM (\x -> has_complex_call $ case_exp x) cases
-    (cval, _) <- generate_exp value Acc (complex_follows || or hc) True
+    (cval, _) <- generate_exp value $ Requirements Acc (complex_follows req || or hc) True
     end_label <- alloc_label
     lcases <- mapM (\x -> alloc_label >>= \l -> return (x, l)) cases
-    ccases <- mapM (\(mc, ml) -> generate_case mc nt ml end_label complex_follows strict_expected)
+    ccases <- mapM (\(mc, ml) -> generate_case mc ml end_label req)
       lcases 
     return (cval ++ [no_label $ JmpCase $ map snd lcases] ++ (concat $ map fst ccases) 
       ++ [CmdSeq (Just end_label) Skip Nothing], and $ map snd ccases )
@@ -173,7 +181,7 @@ generate_exp e nt complex_follows strict_expected = case e of
 generate_function :: Config -> Ast.FunctionSpec -> Ast.Function -> SeqGenerator ([CmdSeq], FunctionCall)
 generate_function conf spec (Ast.Function fid params locals exp) = do
   flable <- s_alloc_label
-  ce <- runStateT (runReaderT (generate_exp exp Return False True) conf) $ FunctionGeneratorState locals
+  ce <- runStateT (runReaderT (generate_exp exp $ Requirements Return False True) conf) $ FunctionGeneratorState locals
   ace <- assign_apply_labels $ fst $ fst ce
   f <- gets CmdGeneratorUtils.is_complex
   return ((CmdSeq (Just flable) Skip (Just $ Ast.fname spec):ace) ++ [CmdSeq Nothing Skip $ Just $ "end of function " ++ Ast.fname spec], 
