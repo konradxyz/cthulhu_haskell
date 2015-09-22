@@ -10,8 +10,8 @@ fibo_c :: int -> int -> int :
 fibo_c n t = fibo n;
 
 fibo_rec :: int -> int :
-fibo_rec n = if lt n 1 then n else
-  add (fibo_rec (sub n 1)) (fib_rec (sub n 2)));
+fibo_rec n = if lt n 2 then n else
+  add (fibo_rec (sub n 1)) (fibo_rec (sub n 2));
 
 call :: int -> int :
 call = fibo_rec ;
