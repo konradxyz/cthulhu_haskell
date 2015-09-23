@@ -28,7 +28,8 @@
 runtime/runtime
 *.swp
 *.hi
-runtimes/*/gen.h
+runtimes/seq/gen.h
+runtimes/par/gen.h
 cthulhu
 tester
 run

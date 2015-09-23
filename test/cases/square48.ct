@@ -1,0 +1,80 @@
+
+thread_count :: int:
+thread_count = 24;
+
+square :: int -> int -> int -> int -> int:
+square acc x y n = 
+  if lt x n then 
+    if lt y n then
+      square (add 1 acc) x (add y 1) n
+    else
+      square acc (add x 1) 0 n
+  else
+    acc;
+
+square_n :: int -> int:
+square_n n = square 0 0 0 n;
+
+
+
+call :: int -> int:
+call n = add
+(
+add
+(
+add 
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+)
+(
+add 
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+)
+)
+(
+add
+(
+add 
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+)
+(
+add 
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+(
+add
+(add (add (square_n n) (square_n n)) (square_n n))
+(add (add (square_n n) (square_n n)) (square_n n))
+)
+)
+)
+; 

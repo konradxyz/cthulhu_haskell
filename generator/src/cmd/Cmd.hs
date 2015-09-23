@@ -13,6 +13,7 @@ data ArithOp =
 
 data Cmd =
     Load Int
+    | LoadMove Int
     | AllocParams Int
     | AllocFunctionEnv Int
     | PrepareParamMove Int Int

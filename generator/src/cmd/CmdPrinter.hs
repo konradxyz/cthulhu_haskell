@@ -34,6 +34,7 @@ err_cmd cmd = ioError $ userError $ "Printing " ++ cmd ++ "- should not happen"
 
 print_cmd :: Map.Map Int FunctionCall -> Cmd -> IO String
 print_cmd _ (Load id) = return $ "LOAD_COPY(" ++ show id ++ ")"
+print_cmd _ (LoadMove id) = return $ "LOAD_MOVE(" ++ show id ++ ")"
 print_cmd _ (AllocParams c) = return $ "ALLOC_PARAMS(" ++ show c ++ ")"
 print_cmd f (AllocFunctionEnv id) = do
   f <- get_function f id
