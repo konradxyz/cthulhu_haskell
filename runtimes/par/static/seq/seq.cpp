@@ -1,5 +1,6 @@
 #include "gen.h"
 #include "static/seq/seq.h"
+#include "static/utils/args.h"
 #include <iostream>
 #include <cstdlib>
 #include <thread>
@@ -26,25 +27,23 @@ void executeQueue(seq::TaskQueue* queue) {
 
 
 int main(int argc, char *argv[]) {
-	if ( argc < 3 ) {
-		std::cerr << "Param expected and thread count expected" << std::endl;
-		return 1;
-	}
-	int param = atoi(argv[1]);
-	unsigned thread_count = atoi(argv[2]);
-	if ( thread_count < 1 ) {
-		std::cerr << "Thread count should be greater than 0" << std::endl;
-		return 1;
-	}
-
-	auto base = generateQueue(param, thread_count);
-	std::vector<std::thread> thread;
-	for ( unsigned i = 0; i < thread_count; ++i ) {
-		thread.emplace_back(executeQueue, base.get());
-	}
-	for ( auto& t : thread ) {
-		t.join();
-	}
-	std::cout << INT(base->getResult()->getFuture()) << std::endl;
-	return 0;
+    utils::Options opts;
+    opts.parse(argc, argv);
+    int param = opts.integer(0);
+    int thread_count = opts.integer("threads");
+    if ( thread_count < 1 ) {
+      std::cerr << "Thread count should be greater than 0" << std::endl;
+      return 1;
+    }
+    std::cerr << "Param: " << param << ", threads: " << thread_count << std::endl;
+    auto base = generateQueue(param, thread_count);
+    std::vector<std::thread> thread;
+    for (int i = 0; i < thread_count; ++i ) {
+      thread.emplace_back(executeQueue, base.get());
+    }
+    for ( auto& t : thread ) {
+      t.join();
+    }
+    std::cout << INT(base->getResult()->getFuture()) << std::endl;
+    return 0;
 }

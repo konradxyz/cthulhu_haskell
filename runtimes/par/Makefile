@@ -24,7 +24,7 @@ $(eval $(call obj,seq,value, static/seq/value.h))
 
 $(eval $(call obj,seq,taskqueue, static/seq/value.h))
 
-$(eval $(call obj,seq,seq, gen.h static/seq/seq.h  static/seq/value.h static/seq/instructions.h))
+$(eval $(call obj,seq,seq, gen.h static/seq/seq.h  static/seq/value.h static/seq/instructions.h static/utils/*.h))
 
 
 $(TARGET):	$(OBJS)
