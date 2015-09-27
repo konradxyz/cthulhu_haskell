@@ -9,6 +9,7 @@
 #define STATIC_SEQ_TASKQUEUE_H_
 
 #include "static/seq/context.h"
+#include "static/utils/spinlock.h"
 #include <vector>
 #include <mutex>
 #include <atomic>
@@ -20,13 +21,18 @@ class FutureValue;
 class TaskQueue {
 private:
 	std::vector<std::unique_ptr<seq::Context>> contexts;
+  
+  // Mutex locking:
 	std::mutex lock;
 	std::condition_variable waiting;
+  // Spinlock locking:
+  utils::SpinLock spin_lock;
 	std::atomic_int taskCount;
 	const int maxTaskCount; // This is only a hint, we will not enforce it.
 	const int threadCount;
 	std::shared_ptr<FutureValue> result;
 	int waitingThreads = 0;
+  bool finishing = false;
 public:
 	void pushTask(std::unique_ptr<Context>&& ctx);
 	void pushTasks(std::vector<std::unique_ptr<Context>>* contexts);
