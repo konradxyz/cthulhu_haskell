@@ -1,4 +1,5 @@
-CXXFLAGS =	 -O2 -Wall -std=c++0x -I. -pthread
+CUSTOM_OPTS=__CUSTOM_OPTS__
+CXXFLAGS =	 -O2 -Wall -std=c++0x -I. -pthread ${CUSTOM_OPTS}
 
 OBJS =
 
@@ -6,7 +7,6 @@ LIBS =
 
 TARGET =	run
 
-CXX=icpc -mmic
 
 all:	$(TARGET)
 
@@ -25,7 +25,7 @@ $(eval $(call obj,seq,value, static/seq/value.h))
 
 $(eval $(call obj,seq,taskqueue, static/seq/value.h))
 
-$(eval $(call obj,seq,seq, gen.h static/seq/seq.h  static/seq/value.h static/seq/instructions.h))
+$(eval $(call obj,seq,seq, gen.h static/seq/seq.h  static/seq/value.h static/seq/instructions.h static/utils/*.h))
 
 
 $(TARGET):	$(OBJS)

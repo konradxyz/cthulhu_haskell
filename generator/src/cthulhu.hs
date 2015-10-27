@@ -97,7 +97,12 @@ run opts = do
         putStrLn "Typecheck failed:"
         putStrLn err
         exitWith $ ExitFailure 1
-  runCmd $ "cd runtimes/" ++ runtime ++ "; make"
+  custom_opts <- if light_queue opts then
+      return "-DNO_MUTEX"
+  else
+      return ""
+  runCmd $ "bash -c 'sed s/__CUSTOM_OPTS__/" ++ custom_opts ++ "/ runtimes/" ++ runtime ++ "/Makefile.template > runtimes/" ++ runtime ++ "/Makefile'"
+  runCmd $ "cd runtimes/" ++ runtime ++ "; make clean; make"
   runCmd $ "cp runtimes/" ++ runtime ++ "/run ."
   if icpc opts
     then runCmd $ "scripts/" ++ runtime ++ "_prepare_icpc.sh"
@@ -105,6 +110,7 @@ run opts = do
   if casm opts
     then runCmd $ "cp runtimes/" ++ runtime ++ "/gen.h run.casm"
     else return ()
+  runCmd $ "rm runtimes/" ++ runtime ++ "/Makefile"
  
 data Options = Options {
   file :: String,
@@ -113,7 +119,8 @@ data Options = Options {
   casm :: Bool,
   icasm :: Bool,
   tco :: Bool,
-  move_opt :: Bool
+  move_opt :: Bool,
+  light_queue :: Bool
 } deriving (Show)
 
 options_parser :: ParserSpec Options
@@ -125,6 +132,7 @@ options_parser = Options
   `andBy` (boolFlag "icasm")
   `andBy` (boolFlag "tco")
   `andBy` (boolFlag "move-opt")
+  `andBy` (boolFlag "light-queue")
 
 main :: IO ()
 main = withParseResult options_parser run

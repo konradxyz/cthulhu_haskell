@@ -9,7 +9,6 @@
 #include "static/seq/value.h"
 
 namespace seq {
-#define NO_MUTEX
 #ifdef NO_MUTEX
 #define QUEUE_LOCK std::unique_lock<utils::SpinLock> m(spin_lock);
 #define QUEUE_MUTEX(x) ;

@@ -64,6 +64,7 @@ files_with_ext extension = do
 
 main = do
   cases <- files_with_ext "ct"
+  mapM (test_case (compilation "ct" "--par --move-opt --light-queue") "--threads 4") $ cases
   mapM (test_case (compilation "ct" "--tco --par --move-opt") "--threads 4") $ cases
   mapM (test_case (compilation "ct" "") "") $ cases
   mapM (test_case (compilation "ct" "--par") "--threads 4") $ cases
