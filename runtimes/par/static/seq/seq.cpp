@@ -9,8 +9,8 @@ std::unique_ptr<seq::Context> generateStartingContext(int param, seq::TaskQueue*
 	return seq::generateStartingContext(param, START_LABEL, FINAL_LABEL, START_ENV_SIZE, queue, result);
 }
 
-std::unique_ptr<seq::TaskQueue> generateQueue(int param, int thread_count) {
-	auto res = utils::make_unique<seq::TaskQueue>(5 * thread_count, thread_count);
+std::unique_ptr<seq::TaskQueue> generateQueue(int param, int thread_count, utils::Options& opts) {
+	auto res = utils::make_unique<seq::TaskQueue>(opts.integer("queue-size"), thread_count);
 	auto ctx = generateStartingContext(param, res.get(), res->getResult());
 	res->pushTask(std::move(ctx));
 	return res;
@@ -31,12 +31,15 @@ int main(int argc, char *argv[]) {
     opts.parse(argc, argv);
     int param = opts.integer(0);
     int thread_count = opts.integer("threads");
+    if (!opts.has("queue-size")) {
+      opts.set("queue-size", "60");
+    }
     if ( thread_count < 1 ) {
       std::cerr << "Thread count should be greater than 0" << std::endl;
       return 1;
     }
     std::cerr << "Param: " << param << ", threads: " << thread_count << std::endl;
-    auto base = generateQueue(param, thread_count);
+    auto base = generateQueue(param, thread_count, opts);
     std::vector<std::thread> thread;
     for (int i = 0; i < thread_count; ++i ) {
       thread.emplace_back(executeQueue, base.get());
