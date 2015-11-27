@@ -14,7 +14,12 @@
 \documentclass{pracamgr}
 
 \usepackage{polski}
-
+\usepackage{xcolor}
+\usepackage{listings}
+\lstset { %
+    language=C++,   
+       basicstyle=\footnotesize,% basic font setting
+}
 %Jesli uzywasz kodowania polskich znakow ISO-8859-2 nastepna linia powinna byc 
 %odkomentowana
 \usepackage[latin2]{inputenc}
@@ -24,15 +29,13 @@
 
 % Dane magistranta:
 
-\author{Robert Blarbarucki}
+\author{Konrad Paziewski}
 
-\nralbumu{666999}
+\nralbumu{306410}
 
-\title{Implementacja blabalizatora ró¿nicowego z~wykorzystaniem teorii
-  fetorów $\sigma$-$\rho$}
+\title{Automatyczne zrównoleglanie programów w jêzykach czysto funkcyjnych}
 
-\tytulang{An implementation of a difference blabalizer based on the theory 
-  of $\sigma$ -- $\rho$ phetors}
+\tytulang{Automatic parallelisation of pure functional programming languages}
 
 %kierunek: Matematyka, Informatyka, ...
 \kierunek{Informatyka}
@@ -55,19 +58,18 @@
 % (podaæ tytu³/stopieñ imiê i nazwisko opiekuna
 % Instytut
 % ew. Wydzia³ ew. Uczelnia (je¿eli nie MIM UW))
-\opiekun{dra hab. Filigrana Fifaka\\
-  Instytut Blabalii Fetorycznej\\
+\opiekun{dra hab. Marcina Benke\\
+  Instytut Informatyki\\
   }
 
 % miesi±c i~rok:
-\date{Maj 2006}
+\date{Listopad 2015}
 
 %Podaæ dziedzinê wg klasyfikacji Socrates-Erasmus:
 \dziedzina{ 
 %11.0 Matematyka, Informatyka:\\ 
 %11.1 Matematyka\\ 
-11.2 Statystyka\\ 
-%11.3 Informatyka\\ 
+11.3 Informatyka\\
 %11.4 Sztuczna inteligencja\\ 
 %11.5 Nauki aktuarialne\\
 %11.9 Inne nauki matematyczne i informatyczne
@@ -92,12 +94,8 @@
 
 %tu idzie streszczenie na strone poczatkowa
 \begin{abstract}
-  W~pracy przedstawiono prototypow± implementacjê blabalizatora
-  ró¿nicowego bazuj±c± na teorii fetorów $\sigma$-$\rho$ profesora
-  Fifaka.  Wykorzystanie teorii Fifaka daje wreszcie mo¿liwo¶æ
-  efektywnego wykonania blabalizy numerycznej.  Fakt ten stanowi
-  prze³om technologiczny, którego konsekwencje trudno z~góry
-  przewidzieæ.
+  W pracy przedstawiono jêzyk funckyjny Cthulhu i jego implementacjê
+  pozwalaj±c± na automatyczne zrównoleglanie programów.
 \end{abstract}
 
 \tableofcontents
@@ -107,30 +105,59 @@
 \chapter*{Wprowadzenie}
 \addcontentsline{toc}{chapter}{Wprowadzenie}
 
-Pe³na implementacja jêzyka Cthulhu sk³ada siê z dwóch czê¶ci.
+Prawo Moore'a od lat siedemdziesi±tych dwudziestego wieku dyktowa³o tempo wzrostu wydajno¶ci
+uk³adów scalonych. Wyk³adniczy wzrost ilo¶ci tranzystorów na jednostkê powierzchni przy zachowaniu
+sta³ej ceny pozwala³ zak³adaæ, ¿e czêstotliwo¶æ taktowania przeciêtnego procesora bêdzie rosn±æ
+dwukrotnie co dwa lata. Niestety, w ostatnich latach tendencja ta zanika. Prawo Moore'a nadal
+dzia³a w sferze miniaturyzacji elementów uk³adów scalonych. Jednak¿e, nie przek³ada siê to ju¿
+na oczekiwany wzrost wydajno¶ci uk³adu. Czêstotliwo¶æ taktowania procesorów nie ro¶nie ju¿
+wyk³adniczo.
 
-Blabalizator ró¿nicowy jest podstawowym narzêdziem blabalii
-fetorycznej.  Dlatego naukowcy z~ca³ego ¶wiata prze¶cigaj± siê
-w~próbach efektywnej implementacji.  Opracowana przez prof. Fifaka
-teoria fetorów $\sigma$-$\rho$ otwiera w~tej dziedzinie nowe
-mo¿liwo¶ci.  Wykorzystujemy je w~niniejszej pracy.
+Du¿o prostszym sposobem na zwiêkszenie teoretycznej mocy obliczeniowej procesora jest
+zwiêkszenie liczby rdzeni. Mo¿liwo¶æ równoleg³ego wykonywania n w±tków obliczeñ
+w teorii zwiêksza ilo¶æ operacji wykonywanych w jednostce czasu n-krotnie w stosunku
+do uk³adu jednow±tkowego.
+Uruchomienie kilku procesów wykorzystuj±cych wiele rdzeni procesora
+jest proste. Nowoczesne systemy operacyjne zapewniaj± skuteczn± izolacjê miêdzy poszczególnymi
+procesami. Taka architektura pozwala na efektywne równoleg³e wykonywanie niezale¿nych od siebie zadañ.
+Niestety wykorzystanie wielu jednostek obliczeniowych procesora do wykonania jednego zadania nie jest zagadnieniem trywialnym.
+Wymaga to podzia³u zadania na podzadania, rozdzielenia podzadan pomiêdzy poszczególne rdzenie,
+a nastêpnie scalenia wyniku.
+Niestety programy wspó³bie¿ne s± trudne do przygotowania, analizy i modyfikacji.
+Czêsto kod odpowiedzialny za synchronizacjê i podzia³
+pracy miêdzy poszczególne w±tki wykonania jest bardziej skomplikowany
+ni¿ sama logika programu. Przyjrzyjmy siê nastêpuj±cym dwóm wersjom tej samej funkcji:
 
-Przystêpne wprowadzenie do blabalii fetorycznej mo¿na znale¼æ w~pracy
-Fifaka i~Gryzogrzechotalskiego \cite{ffgg}.  Dlatego w~niniejszym
-tek¶cie ograniczymy siê do przypomnienia pojêæ podstawowych.
+\begin{lstlisting}
+template<typename A, typename B, typename F>
+void map(F& f, std::vector<A>& input, std::vector<B>& output) {
+    output.resize(input.size());
+    for ( unsigned i = 0; i < input.size(); ++i ){
+        output[i] = f(input[i]);
+    }
+}
 
-Praca sk³ada siê z~piêciu rozdzia³ów i~dodatków.
-W~rozdziale~\ref{r:pojecia} przypomniano podstawowe pojêcia blabalii
-fetorycznej.  Dotychczasowe próby implementacji blablizatora
-ró¿nicowego zestawiono w~rozdziale~\ref{r:losers}.
-Rozdzia³~\ref{r:fifak} przedstawia teoriê Fifaka i~wyja¶nia sposób jej
-wykorzystania w~implementacji blabalizatora.  W~rozdziale \ref{r:impl}
-przedstawiono algorytm blabalizy i~realizuj±cy go program komputerowy.
-Ostatni rozdzia³ zawiera przemy¶lenia dotycz±ce mo¿liwego wp³ywu
-dostêpno¶ci efektywnej blabalizy numerycznej na rozwój blabalii
-fetorycznej.  W~dodatkach umieszczono najciekawszy fragment programu,
-przyk³adowe dane i~wyniki dzia³ania programu.
+template<typename A, typename B, typename F>
+void map_par(F& f, std::vector<A>& input, std::vector<B>& output) {
+  output.resize(input.size());
+  std::vector<std::thread> threads;
+  auto operation = [&input, &output, &f](int i) {
+    output[i] = f(input[i]);
+  };
+  for ( unsigned i = 0; i < input.size(); ++i )
+    threads.emplace_back(operation, i);
+  for ( unsigned i = 0; i < threads.size(); ++i )
+    threads[i].join();
+}
+\end{lstlisting}
 
+Zauwa¿my, ¿e wiêkszo¶æ kodu drugiej z zademonstrowanych tu procedur odpowiada za zrównoleglenie
+pracy. Co wiêcej, na pierwszy rzut oka ciê¿ko oceniæ jakie rzeczywi¶cie zadanie wykonuje ta funkcja.
+
+Tego typu problemy czêsto sprawiaj± ¿e programi¶ci uciekaj± od pisania programów wielow±tkow
+
+Wydajno¶æ 
+Jednak¿e, pe³ne wykorzystanie 
 \chapter{Podstawowe pojêcia}\label{r:pojecia}
 
 Pojêciem pierwotnym blabalii fetorycznej jest \emph{blaba}.
@@ -226,21 +253,35 @@ znalezienia najlepszego rozwi±zania.  Fifak w~pracy~\cite{ff-sr}
 podaje, jak dla dowolnie zadanej funkcji oceniaj±cej skonstruowaæ
 dane, dla których rozwi±zanie wygenerowane przez algorytm heurystyczny
 jest dowolnie odleg³e od rzeczywistego.
-\chapter{Semantyka}
-\chapter{Implementacja}
+\chapter{Idea}
 
 Nale¿y zwróciæ uwagê ¿e cthulhu jest jêzykiem w pe³ni czystym.
 Semantyka nie wyznacza ¿adnej szczególnej kolejno¶ci operacji,
 nie zawiera te¿ pojêcia stanu. Oznacza to zatem, ¿e mamy 
 dowolno¶æ co do wyboru wyra¿eñ które zostan± wykonane równolegle.
 
-Opisywana w tym dokumencie realizacja cthulhu t³umaczy
-kod wej¶ciowy na kod C++.
-Pe³na implentacja tego jêzyka sk³ada siê z dwóch czê¶ci. Pierwsz± z nich jest
+\chapter{Opis jêzyka}
+\section{System typów}
+Zbiór 
+
+Cthulhu jest prostym jêzykiem funkcyjnym o ograniczonej liczbie dostêpnych konstrukcji.
+Program sk³ada siê z listy definicji typów i funkcji.
+
+Program w tym jêzyku modeluje funkcjê ze zbioru liczb naturalnych w zbior liczb naturalnych.
+  
+
+\chapter{Semantyka}
+Proponowany jêzyk programowania jest pe³nowarto¶ciowym jêzykiem funkcyjnym.
+
+\chapter{Implementacja}
+Przygotowana przez mnie i opsywana w tym dokumencie realizacja jêzyka Cthulhu
+sk³ada siê z dwóch czê¶ci. Pierwsz± z nich jest
 napisany w Haskellu generator kodu. Jego zadaniem jest statyczna
-analiza programu wej¶ciowego. Generator kodu sprawdza poprawno¶æ
+analiza programu wej¶ciowego i wygenerowanie równowa¿nego programu w C++. 
+Generator kodu sprawdza poprawno¶æ
 kodu a tak¿e dba o optymalizacje oraz wybór wyra¿eñ które bêd±
-obliczane równolegle. Drugim elementem jest przygotowane w C++
+obliczane równolegle. 
+Drugim elementem jest przygotowane w C++
 ¶rodowisko uruchomieniowe. Fragmenty te s± po³±czone przez
 pewnego rodzaju zbiór instrukcji przypominaj±cych ideowo
 instrukcje asemblerowe.
@@ -281,23 +322,7 @@ obliczenie równoleg³e tylko dla wyra¿eñ bêd±cych wywo³aniami
 funkcji. Co wiêcej, jedyne funkcje które  
 
 \section{¦rodowisko uruchomieniowe}
-
-G³ównym odkryciem Fifaka jest, ¿e fetor suprakowariantny mo¿e
-gryzmolizowaæ dowolny idea³ w~podprzestrzeni wid³owej przestrzeni
-lamblialnej funkcji Rozkoszy.
-
-Udowodnienie tego faktu wymaga³o wykorzystania twierdzeñ pochodz±cych
-z~kilku niezale¿nych teorii matematycznych (zob. na przyk³ad:
-\cite{russell,spyrpt,JR,beaman,hopp,srinis}).  Jednym z~filarów
-dowodu jest teoria odwzorowañ owalnych Leukocyta (zob.~\cite{leuk}).
-
-Znaczenie twierdzenia Fifaka dla problemu blabalizy polega na tym, ¿e
-znaj±c retroizotonalne wspó³czynniki dla klatek Rozkoszy mo¿na
-przeprowadziæ fetory bazowe na dwie nieskoñczone bazy fetorów $\sigma$
-w~przestrzeni $K_7$ i~fetorów $\rho$ w~odpowiedniej
-quasi-quasi-przestrzeni równoleg³ej (zob.~\cite{hopp}).  Zasadnicza
-ró¿nica w~stosunku do innych metod blabalizy polega na tym, ¿e
-przedstawienie to jest dok³adne.
+¦rodowisko uruchomieniowe 
 
 \chapter{Dokumentacja u¿ytkowa i~opis implementacji}\label{r:impl}
 
