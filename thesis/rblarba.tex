@@ -40,24 +40,6 @@
 %kierunek: Matematyka, Informatyka, ...
 \kierunek{Informatyka}
 
-% informatyka - nie okreslamy zakresu (opcja zakomentowana)
-% matematyka - zakres moze pozostac nieokreslony,
-% a jesli ma byc okreslony dla pracy mgr,
-% to przyjmuje jedna z wartosci:
-% {metod matematycznych w finansach}
-% {metod matematycznych w ubezpieczeniach}
-% {matematyki stosowanej}
-% {nauczania matematyki}
-% Dla pracy licencjackiej mamy natomiast
-% mozliwosc wpisania takiej wartosci zakresu:
-% {Jednoczesnych Studiow Ekonomiczno--Matematycznych}
-
-% \zakres{Tu wpisac, jesli trzeba, jedna z opcji podanych wyzej}
-
-% Praca wykonana pod kierunkiem:
-% (podaæ tytu³/stopieñ imiê i nazwisko opiekuna
-% Instytut
-% ew. Wydzia³ ew. Uczelnia (je¿eli nie MIM UW))
 \opiekun{dra hab. Marcina Benke\\
   Instytut Informatyki\\
   }
@@ -154,115 +136,50 @@ void map_par(F& f, std::vector<A>& input, std::vector<B>& output) {
 Zauwa¿my, ¿e wiêkszo¶æ kodu drugiej z zademonstrowanych tu procedur odpowiada za zrównoleglenie
 pracy. Co wiêcej, na pierwszy rzut oka ciê¿ko oceniæ jakie rzeczywi¶cie zadanie wykonuje ta funkcja.
 
-Tego typu problemy czêsto sprawiaj± ¿e programi¶ci uciekaj± od pisania programów wielow±tkow
+Tego typu problemy czêsto sprawiaj± ¿e programi¶ci uciekaj± od pisania programów wielow±tkowych.
+Jawne wykorzystanie klasycznych mechanizmów wielow±tkowych znacz±co utrudnia analizê algorytmu.
 
-Wydajno¶æ 
-Jednak¿e, pe³ne wykorzystanie 
+\chapter{Motywacja}
+Nie ma ¿adnej uniwersalnej miary u¿yteczno¶ci fragmentu oprogramowania.
+Jednak¿e, intuicyjnie u¿yteczny program komputerowy powinien spe³niaæ dwa
+podstawowe kryteria. Po pierwsze, powinien byæ poprawny. Poprawno¶æ nale¿y
+tu rozumieæ jako zgodno¶æ programu ze specyfikacj±, zarówno je¿eli chodzi o zwracane przez
+program wyniki jak i zmiany jakie wprowadza w ¶rodowisku w którym dzia³a. Po drugie, program
+powinien byæ wykonywalny w okre¶lonym ¶rodowisku - to znaczy powinien istnieæ mechanizm
+pozwalaj±cy uruchomiæ dany program w tym ¶rodowisku i uzyskaæ efekty dzia³ania tego¿ programu
+tak ¿eby one mo¿liwe do wykorzystania przez system lub osobê która ten program uruchamia.
+W szczególno¶ci zatem, wyniki musz± byæ dostêpne na tyle szybko ¿eby wywo³uj±cy
+nadal by³ tymi wynikami zainteresowany. Niezale¿nie od tego z jakim systemem mamy do czynienia,
+zawsze istnieje jakies ograniczenie czasowe na wykonanie programu czy te¿ czê¶ci programu.
+W zale¿no¶ci od sytuacji ograniczenie to mo¿e mieæ warto¶ci od milisekund (dla systemów
+wspomagania jazdy), przez sekundy (serwisów WWW lub przegl±darek internetowych) po tygodnie
+(dla bardziej skomplikownych obliczeñ statystycznych, gdzie zwykle ograniczeniem nie jest
+ju¿ sam czas dzia³ania obliczenia ale jego pochodna - koszt wynajmowania serwerów), zawsze jednak
+istnieje i praktycznie zawsze im szybciej program dzia³a tym jest bardziej przydatny.
+
+Mechanizmy wielow±tkowe daj± szansê na zwiêkszenie wydajno¶ci programów, zwiêkszaj±c
+jednak równocze¶nie prawdopodobieñstwo b³êdu - czy te¿ niezgodno¶ci ze specyfikacj±.
+
+
+
+
+Tworzenie u¿ytecznych programów wielow±tkowych jest zagadnieniem trudnym.
+to byæ 
+
+Dostêp do wspó³dzielonych przez w±tki zasobów
+takich jak struktury danych czy te¿ jakiekolwiek obiekty posiadaj±ce wewnêtrzny stan musi
+byæ synchronizowany. Synchronizacja z drugiej strony wprowadza dodatkowy narzut na wykonanie
+programu, obni¿aj±c wydajno¶æ. Dobrze dzia³aj±cy algorytm wielow±tkowy powinien bezwzglêdnie
+zwracaæ wyniki zgodne z jego specyfikacj±. 
+
+
 \chapter{Podstawowe pojêcia}\label{r:pojecia}
-
-Pojêciem pierwotnym blabalii fetorycznej jest \emph{blaba}.
-Blabali¶ci nie podaj± jego definicji, mówi±c za Ciach-Pfe t-\=am
-K\^un (fooistyczny mêdrzec, XIX w. p.n.e.):
-\begin{quote}
-  Blaba, który jest blaba, nie jest prawdziwym blaba.
-
-\raggedleft\slshape t³um. z~chiñskiego Robert Blarbarucki
-\end{quote}
-
-\section{Definicje}
-
-Oto dwie definicje wprowadzaj±ce podstawowe pojêcia blabalii
-fetorycznej:
-
-\begin{defi}\label{skupienie}
-  Silny, zwarty i gotowy fetor bazowy nazwiemy \emph{skupieniem}.
-\end{defi}
-
-\begin{defi}\label{fetor}
-  \emph{Fetorem} nazwiemy skupienie blaba spe³niaj±ce nastêpuj±cy
-  \emph{aksjomat reperkusatywno¶ci}:
-  $$\forall \mathcal{X}\in Z(t)\ \exists
-  \pi\subseteq\oint_{\Omega^2}\kappa\leftrightarrow 42$$
-\end{defi}
-
-
-\section{Implementacja}
-
-Teoretycy blabalii (zob. np. pracê~\cite{grglo}) zadowalaj± siê
-niekonstruktywnym opisem natury fetorów.
-
-Podstawowym narzêdziem blabalii empirycznej jest blabalizator
-ró¿nicowy.  Przyrz±d ten pozwala w~sposób przybli¿ony uzyskaæ
-wspó³czynniki rozk³adu G³ombaskiego dla fetorów bazowych
-i~harmonicznych.  Praktyczne znaczenie tego procesu jest oczywiste:
-korzystaj±c z~reperkusatywno¶ci pozwala on przej¶æ do przestrzeni
-$\Lambda^{\nabla}$, a~tym samym znale¼æ retroizotonalne wspó³czynniki
-semi-quasi-celibatu dla klatek Rozkoszy (zob.~\cite{JR}).
-
-Klasyczne algorytmy dla blabalizatora ró¿nicowego wykorzystuj±:
-\begin{enumerate}
-\item dualizm falowo\dywiz korpuskularny, a w szczególno¶ci
-  \begin{enumerate}
-  \item korpuskularn± naturê fetorów,
-  \item falow± naturê blaba,
-  \item falowo\dywiz korpuskularn± naturê gryzmo³ów;
-  \end{enumerate}
-\item postêpuj±c± gryzmolizacjê poszczególnych dziedzin nauki, w
-  szczególno¶ci badañ systemowych i rozcieñczonych;
-\item dynamizm fazowy stetryczenia parajonizacyjnego;
-\item wreszcie tradycyjne opozycje:
-  \begin{itemize}
-  \item duch --- bakteria,
-  \item mieæ --- chcieæ,
-  \item my¶l --- owsianka,
-  \item parafina --- durszlak\footnote{Wiêcej o tym przypadku --- patrz
-      prace Gryzybór\dywiz G³ombaskiego i innych teoretyków nurtu
-      teoretyczno\dywiz praktycznego badañ w~Instytucie Podstawowych
-      Problemów Blabalii w~Fifie.},
-  \item logos --- termos%\footnote{Szpotañski}
-  \end{itemize}
-  z w³a¶ciwym im przedziwym dynamizmem.
-\end{enumerate}
-
-\begin{figure}[tp]
-  \centering
-  \framebox{\vbox to 4cm{\vfil\hbox to
-      7cm{\hfil\tiny.\hfil}\vfil}}
-  \caption{Artystyczna wizja blaba w~obrazie wêgierskiego artysty
-    Josipa~A. Rozkoszy pt.~,,Blaba''}
-\end{figure}
-
-\chapter{Wcze¶niejsze implementacje blabalizatora
-  ró¿nicowego}\label{r:losers}
-
-\section{Podej¶cie wprost}
-
-Najprostszym sposobem wykonania blabalizy jest si³owe przeszukanie
-ca³ej przestrzeni rozwi±zañ.  Jednak, jak ³atwo wyliczyæ, rozmiar
-przestrzeni rozwi±zañ ro¶nie wyk³adniczo z~liczb± fetorów bazowych.
-Tak wiêc przegl±d wszystkich rozwi±zañ sprawdza siê jedynie dla bardzo
-prostych przestrzeni lamblialnych.  Oznacza to, ¿e taka metoda ma
-niewielkie znaczenie praktyczne --- w~typowym przypadku z~¿ycia trzeba
-rozwa¿aæ przestrzenie lamblialne wymiaru rzêdu 1000.
-
-W~literaturze mo¿na znale¼æ kilka prób opracowania heurystyk dla
-problemu blabalizy (por. \cite{heu}).  Korzystaj±c z~heurystyk daje
-siê z~pewnym trudem dokonaæ blabalizy w~przestrzeni o~np.~500 fetorach
-bazowych.  Nale¿y jednak pamiêtaæ, ¿e heurystyka nie daje gwarancji
-znalezienia najlepszego rozwi±zania.  Fifak w~pracy~\cite{ff-sr}
-podaje, jak dla dowolnie zadanej funkcji oceniaj±cej skonstruowaæ
-dane, dla których rozwi±zanie wygenerowane przez algorytm heurystyczny
-jest dowolnie odleg³e od rzeczywistego.
-\chapter{Idea}
-
-Nale¿y zwróciæ uwagê ¿e cthulhu jest jêzykiem w pe³ni czystym.
-Semantyka nie wyznacza ¿adnej szczególnej kolejno¶ci operacji,
-nie zawiera te¿ pojêcia stanu. Oznacza to zatem, ¿e mamy 
-dowolno¶æ co do wyboru wyra¿eñ które zostan± wykonane równolegle.
-
+Nie wiem co tu wpisaæ ale wygl±da jak co¶ ciekawego.
+Mo¿e da siê tu co¶ wcisn±æ.
 \chapter{Opis jêzyka}
+Why not?
 \section{System typów}
-Zbiór 
+Zbiór  
 
 Cthulhu jest prostym jêzykiem funkcyjnym o ograniczonej liczbie dostêpnych konstrukcji.
 Program sk³ada siê z listy definicji typów i funkcji.
@@ -272,6 +189,7 @@ Program w tym jêzyku modeluje funkcjê ze zbioru liczb naturalnych w zbior liczb 
 
 \chapter{Semantyka}
 Proponowany jêzyk programowania jest pe³nowarto¶ciowym jêzykiem funkcyjnym.
+Pe³na formalna semantyka na 
 
 \chapter{Implementacja}
 Przygotowana przez mnie i opsywana w tym dokumencie realizacja jêzyka Cthulhu
@@ -324,16 +242,9 @@ funkcji. Co wiêcej, jedyne funkcje które
 \section{¦rodowisko uruchomieniowe}
 ¦rodowisko uruchomieniowe 
 
-\chapter{Dokumentacja u¿ytkowa i~opis implementacji}\label{r:impl}
 
-Program przygotowany dla systemu operacyjnego M\$ Windows uruchamia
-siê energicznym dwumlaskiem na jego ikonce w~folderze
-\verb+\\FIDO\FOO\BLABA+.  Nastêpnie kolistym ruchem rêki nale¿y
-naprowadziæ kursor na menu \texttt{Blabaliza} i~uaktywniæ pozycjê
-\texttt{Otwórz plik}.  Po wybraniu pliku i~zatwierdzeniu wyboru
-przyciskiem \texttt{OK} rozpocznie siê proces blabalizy.  Wyniki
-zostan± zapisane w~pliku o~nazwie \texttt{99-1a.tx.43} w~bie¿±cym
-folderze.
+\chapter{Przyk³ady}
+Kilka wykresów, o
 
 \chapter{Podsumowanie}
 
@@ -353,80 +264,6 @@ oczywiste mo¿na wskazaæ ju¿ teraz.  S± to:
 \item dok³adne obliczenie wieku Wszech¶wiata.
 \end{itemize}
 
-\section{Perspektywy wykorzystania w~przemy¶le}
-
-Ze wzglêdu na znaczenie strategiczne wyników pracy ten punkt uleg³
-utajnieniu.
-
-\appendix
-
-\chapter{G³ówna pêtla programu zapisana w~jêzyku T\=oFoo}
-
-\begin{verbatim}
-[[foo]{,}[[a3,(([(,),{[[]]}]),
-  [1; [{,13},[[[11],11],231]]].
-  [13;[!xz]].
-  [42;[{,x},[[2],{'a'},14]]].
-  [br;[XQ*10]].
- ), 2q, for, [1,]2, [..].[7]{x}],[(((,[[1{{123,},},;.112]],
-        else 42;
-   . 'b'.. '9', [[13141],{13414}], 11),
- [1; [[134,sigma],22]].
- [2; [[rho,-],11]].
- )[14].
- ), {1234}],]. [map [cc], 1, 22]. [rho x 1]. {22; [22]},
-       dd.
- [11; sigma].
-        ss.4.c.q.42.b.ll.ls.chmod.aux.rm.foo;
- [112.34; rho];
-        001110101010101010101010101010101111101001@
- [22%f4].
- cq. rep. else 7;
- ]. hlt
-\end{verbatim}
-
-\chapter{Przyk³adowe dane wej¶ciowe algorytmu}
-
-\begin{center}
-  \begin{tabular}{rrr}
-    $\alpha$ & $\beta$ & $\gamma_7$ \\
-    901384 & 13784 & 1341\\
-    68746546 & 13498& 09165\\
-    918324719& 1789 & 1310 \\
-    9089 & 91032874& 1873 \\
-    1 & 9187 & 19032874193 \\
-    90143 & 01938 & 0193284 \\
-    309132 & $-1349$ & $-149089088$ \\
-    0202122 & 1234132 & 918324098 \\
-    11234 & $-109234$ & 1934 \\
-  \end{tabular}
-\end{center}
-
-\chapter{Przyk³adowe wyniki blabalizy
-    (ze~wspó³czynnikami~$\sigma$-$\rho$)}
-
-\begin{center}
-  \begin{tabular}{lrrrr}
-    & Wspó³czynniki \\
-    & G³ombaskiego & $\rho$ & $\sigma$ & $\sigma$-$\rho$\\
-    $\gamma_{0}$ & 1,331 & 2,01 & 13,42 & 0,01 \\
-    $\gamma_{1}$ & 1,331 & 113,01 & 13,42 & 0,01 \\
-    $\gamma_{2}$ & 1,332 & 0,01 & 13,42 & 0,01 \\
-    $\gamma_{3}$ & 1,331 & 51,01 & 13,42 & 0,01 \\
-    $\gamma_{4}$ & 1,332 & 3165,01 & 13,42 & 0,01 \\
-    $\gamma_{5}$ & 1,331 & 1,01 & 13,42 & 0,01 \\
-    $\gamma_{6}$ & 1,330 & 0,01 & 13,42 & 0,01 \\
-    $\gamma_{7}$ & 1,331 & 16435,01 & 13,42 & 0,01 \\
-    $\gamma_{8}$ & 1,332 & 865336,01 & 13,42 & 0,01 \\
-    $\gamma_{9}$ & 1,331 & 34,01 & 13,42 & 0,01 \\
-    $\gamma_{10}$ & 1,332 & 7891432,01 & 13,42 & 0,01 \\
-    $\gamma_{11}$ & 1,331 & 8913,01 & 13,42 & 0,01 \\
-    $\gamma_{12}$ & 1,331 & 13,01 & 13,42 & 0,01 \\
-    $\gamma_{13}$ & 1,334 & 789,01 & 13,42 & 0,01 \\
-    $\gamma_{14}$ & 1,331 & 4897453,01 & 13,42 & 0,01 \\
-    $\gamma_{15}$ & 1,329 & 783591,01 & 13,42 & 0,01 \\
-  \end{tabular}
-\end{center}
 
 \begin{thebibliography}{99}
 \addcontentsline{toc}{chapter}{Bibliografia}
