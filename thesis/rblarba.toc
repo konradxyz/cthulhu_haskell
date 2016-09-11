@@ -4,20 +4,21 @@
 \contentsline {section}{\numberline {1.2}Implementacja}{7}
 \contentsline {chapter}{\numberline {2}Wcze\'sniejsze implementacje blabalizatora r\'o\.znicowego}{9}
 \contentsline {section}{\numberline {2.1}Podej\'scie wprost}{9}
-\contentsline {section}{\numberline {2.2}Metody wykorzystuj\k ace teori\k e G\IeC {\l }ombaskiego}{9}
-\contentsline {section}{\numberline {2.3}Metody wykorzystuj\k ace w\IeC {\l }asno\'sci fetor\'ow $\sigma $}{9}
-\contentsline {chapter}{\numberline {3}Semantyka}{11}
-\contentsline {chapter}{\numberline {4}Implementacja}{13}
-\contentsline {section}{\numberline {4.1}Asembler cthulhu}{13}
-\contentsline {section}{\numberline {4.2}Generator kodu}{13}
-\contentsline {subsection}{\numberline {4.2.1}Analiza leksykalno-sk\IeC {\l }adniowa}{13}
-\contentsline {subsection}{\numberline {4.2.2}Analiza semantyczna}{14}
-\contentsline {subsection}{\numberline {4.2.3}Przygotowanie listy instrukcji}{14}
-\contentsline {section}{\numberline {4.3}\'Srodowisko uruchomieniowe}{14}
-\contentsline {chapter}{\numberline {5}Dokumentacja u\.zytkowa i\nobreakspace {}opis implementacji}{15}
-\contentsline {chapter}{\numberline {6}Podsumowanie}{17}
-\contentsline {section}{\numberline {6.1}Perspektywy wykorzystania w\nobreakspace {}przemy\'sle}{17}
-\contentsline {chapter}{\numberline {A}G\IeC {\l }\'owna p\k etla programu zapisana w\nobreakspace {}j\k ezyku T\=oFoo}{19}
-\contentsline {chapter}{\numberline {B}Przyk\IeC {\l }adowe dane wej\'sciowe algorytmu}{21}
-\contentsline {chapter}{\numberline {C}Przyk\IeC {\l }adowe wyniki blabalizy (ze\nobreakspace {}wsp\'o\IeC {\l }czynnikami\nobreakspace {}$\sigma $-$\rho $)}{23}
-\contentsline {chapter}{Bibliografia}{25}
+\contentsline {chapter}{\numberline {3}Idea}{11}
+\contentsline {chapter}{\numberline {4}Opis j\k ezyka}{13}
+\contentsline {section}{\numberline {4.1}System typ\'ow}{13}
+\contentsline {chapter}{\numberline {5}Semantyka}{15}
+\contentsline {chapter}{\numberline {6}Implementacja}{17}
+\contentsline {section}{\numberline {6.1}Asembler cthulhu}{17}
+\contentsline {section}{\numberline {6.2}Generator kodu}{17}
+\contentsline {subsection}{\numberline {6.2.1}Analiza leksykalno-sk\IeC {\l }adniowa}{17}
+\contentsline {subsection}{\numberline {6.2.2}Analiza semantyczna}{17}
+\contentsline {subsection}{\numberline {6.2.3}Przygotowanie listy instrukcji}{18}
+\contentsline {section}{\numberline {6.3}\'Srodowisko uruchomieniowe}{18}
+\contentsline {chapter}{\numberline {7}Dokumentacja u\.zytkowa i\nobreakspace {}opis implementacji}{19}
+\contentsline {chapter}{\numberline {8}Podsumowanie}{21}
+\contentsline {section}{\numberline {8.1}Perspektywy wykorzystania w\nobreakspace {}przemy\'sle}{21}
+\contentsline {chapter}{\numberline {A}G\IeC {\l }\'owna p\k etla programu zapisana w\nobreakspace {}j\k ezyku T\=oFoo}{23}
+\contentsline {chapter}{\numberline {B}Przyk\IeC {\l }adowe dane wej\'sciowe algorytmu}{25}
+\contentsline {chapter}{\numberline {C}Przyk\IeC {\l }adowe wyniki blabalizy (ze\nobreakspace {}wsp\'o\IeC {\l }czynnikami\nobreakspace {}$\sigma $-$\rho $)}{27}
+\contentsline {chapter}{Bibliografia}{29}

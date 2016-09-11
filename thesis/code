@@ -1,0 +1,13 @@
+template<typename A, typename B, typename F>
+void map_par(F& f, std::vector<A>& input, std::vector<B>& output) {
+  output.resize(input.size());
+  std::vector<std::thread> threads;
+  auto operation = [&input, &output, &f](int i) {
+    output[i] = f(input[i]);
+  };
+  for ( unsigned i = 0; i < input.size(); ++i )
+    threads.emplace_back(operation, i);
+  for ( unsigned i = 0; i < threads.size(); ++i )
+    threads[i].join();
+}
+

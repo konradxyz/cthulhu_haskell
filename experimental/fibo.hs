@@ -1,5 +1,6 @@
 import System.Environment 
-
+import Control.Parallel
+import Control.Parallel.Strategies
 
 
 --fibo n = if n < 2 then n else fibo (n - 1) + fibo (n - 2)
@@ -38,15 +39,31 @@ exists_queen_seen xrow cols = case cols of
       then True
       else exists_queen_seen (add xrow 1) ycols
 
-queens :: Int -> Int -> [Int] -> Int
-queens current max prev = if current < max then
-    foldl (+) 0 $ map (queens (current + 1) max ) $ map (:prev) [0..max - 1]
-  else if exists_queen_seen 0 prev then 0 else 1
+queens :: Int ->  Int -> Int -> [Int] -> Int
+queens r current max prev = if current < max then
+    foldl (+) 0 $ map (queens r (current + 1) max ) $ map (:prev) [0..max - 1]
+  else if exists_queen_seen 0 prev then 0 else r
+
+_queens :: Int -> Int -> Int -> [Int] -> Int
+_queens x c m p = x + queens x c m p
+mmap :: (a -> b) -> [a] -> [b]
+mmap f l = case l of
+  [] -> []
+  (a:t) -> (f a: mmap f t)
+
+mmap_par :: (a -> b) -> [a] -> [b]
+mmap_par f l = case l of
+  [] -> []
+  (a:t) -> runEval $ do
+    fa <- rpar $ f a
+    ft <- rseq $ mmap_par f t
+    return (fa : ft)
 
 
-
-fun n = queens 0 n []
-
+--  let x = f a in x `rpar` (x: mmap f t)
+numbers1 = 1 : map (+1) numbers1
+--mmap_par_pr = parMap rdeepseq
+fun n = mmap_par  (\x -> _queens x 0 n []) $ take 16 numbers1
 main = do
   (h:_) <- getArgs
   putStrLn $ show $ fun $ (read::String->Int) h
