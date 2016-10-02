@@ -1,7 +1,7 @@
 module Typechecker where
 import Data.List
 import Ast
-import qualified Abscthulhu as Abs
+import qualified AbsCthulhu as Abs
 import Template
 import qualified Data.Map as Map
 import Data.Maybe

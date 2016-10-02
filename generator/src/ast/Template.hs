@@ -1,6 +1,6 @@
 module Template where
 
-import qualified Abscthulhu as Abs
+import qualified AbsCthulhu as Abs
 import qualified Data.Map as Map
 import qualified Ast as Ast
 import Data.List

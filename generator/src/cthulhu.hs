@@ -9,11 +9,8 @@ import System.Environment ( getArgs, getProgName )
 import System.Process
 import GHC.IO.Handle
 
-import Lexcthulhu
-import Parcthulhu
-import Skelcthulhu
-import Printcthulhu
-import Abscthulhu
+import qualified AbsCthulhu as Abs
+import qualified ParCthulhu as Par
 
 import Ast
 import qualified Config
@@ -25,23 +22,23 @@ import CmdPrinter
 import ErrM
 import Utils
 
-parser = pProgram
+parser = Par.pProgram
 
-parseFile :: String -> IO(Abscthulhu.Program)
+parseFile :: String -> IO(Abs.Program)
 parseFile fname = do
   input <- readFile fname
-  case parser $ myLexer input of
+  case parser $ Par.myLexer input of
     Bad s -> do
       putStrLn $ "Could not parse " ++ fname
       putStrLn s
       exitFailure
     Ok tree -> return tree 
 
-parseFiles :: [String] -> IO(Abscthulhu.Program)
+parseFiles :: [String] -> IO(Abs.Program)
 parseFiles files = do
   progs <- mapM parseFile files
-  return $ Abscthulhu.RealProgram $ concat $ 
-    map (\x -> let Abscthulhu.RealProgram p = x in p) progs 
+  return $ Abs.RealProgram $ concat $ 
+    map (\x -> let Abs.RealProgram p = x in p) progs 
 
 runCmd :: String -> IO()
 runCmd cmd = do
