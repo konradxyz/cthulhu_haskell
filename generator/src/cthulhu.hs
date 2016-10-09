@@ -14,6 +14,7 @@ import qualified ParCthulhu as Par
 
 import Ast
 import qualified Config
+import qualified Inliner
 import Typechecker
 import Template
 import SeqGenerator
@@ -79,6 +80,10 @@ run opts = do
       return ("par", ParGenerator.generate)
     else
       return ("seq", SeqGenerator.generate)
+  inliner <- if inline opts then do
+      return Inliner.inline
+    else
+      return id
   if icasm opts then do
     runCmd $ "cp " ++ file opts ++ " runtimes/" ++ runtime ++ "/gen.h"
   else do
@@ -117,7 +122,8 @@ data Options = Options {
   icasm :: Bool,
   tco :: Bool,
   move_opt :: Bool,
-  light_queue :: Bool
+  light_queue :: Bool,
+  inline :: Bool
 } deriving (Show)
 
 options_parser :: ParserSpec Options
@@ -130,6 +136,7 @@ options_parser = Options
   `andBy` (boolFlag "tco")
   `andBy` (boolFlag "move-opt")
   `andBy` (boolFlag "light-queue")
+  `andBy` (boolFlag "inline")
 
 main :: IO ()
 main = withParseResult options_parser run
